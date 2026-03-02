@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sudoku</title>
+    <meta name="description" content="Play Sudoku with three difficulty levels in this premium browser puzzle game." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="sudoku.css" />
+</head>
+
+<body>
+    <div class="bg-orbs">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+    </div>
+
+    <div class="page">
+        <header class="game-header">
+            <a href="index.html" class="back-btn">← Menu</a>
+            <h1 class="game-title">🔢 Sudoku</h1>
+            <div id="timer" class="timer">00:00</div>
+        </header>
+
+        <div class="game-layout">
+            <div class="controls-bar">
+                <div class="diff-group">
+                    <button class="diff-btn active" data-diff="easy">Easy</button>
+                    <button class="diff-btn" data-diff="medium">Medium</button>
+                    <button class="diff-btn" data-diff="hard">Hard</button>
+                </div>
+                <button id="new-puzzle-btn" class="ctrl-btn">New Puzzle</button>
+                <button id="notes-btn" class="ctrl-btn" title="Toggle Notes Mode">✏ Notes</button>
+                <button id="undo-btn" class="ctrl-btn">↩ Undo</button>
+            </div>
+
+            <div class="sudoku-grid" id="sudoku-grid"></div>
+
+            <div class="num-pad" id="num-pad">
+                <button class="num-key" data-num="1">1</button>
+                <button class="num-key" data-num="2">2</button>
+                <button class="num-key" data-num="3">3</button>
+                <button class="num-key" data-num="4">4</button>
+                <button class="num-key" data-num="5">5</button>
+                <button class="num-key" data-num="6">6</button>
+                <button class="num-key" data-num="7">7</button>
+                <button class="num-key" data-num="8">8</button>
+                <button class="num-key" data-num="9">9</button>
+                <button class="num-key erase-key" data-num="0">⌫</button>
+            </div>
+
+            <div id="mistakes-row" class="mistakes-row">
+                Mistakes: <span id="mistakes">0</span>/3
+                &nbsp;|&nbsp;
+                Best: <span id="best-time">--:--</span>
+            </div>
+        </div>
+
+        <!-- Win overlay -->
+        <div id="win-overlay" class="win-overlay hidden">
+            <div class="win-box">
+                <div class="win-icon">🎉</div>
+                <h2 class="win-title">Solved!</h2>
+                <p class="win-time">Time: <span id="win-time-val">00:00</span></p>
+                <div id="win-best-badge" class="win-best hidden">🏆 New Best!</div>
+                <button id="win-new-btn" class="win-btn">New Puzzle</button>
+                <a href="index.html" class="win-link">← Main Menu</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="sudoku.js"></script>
+</body>
+
+</html>

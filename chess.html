@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chess</title>
+    <meta name="description" content="Play Chess vs AI or a friend in this premium browser chess game." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="chess.css" />
+</head>
+
+<body>
+    <div class="bg-orbs">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+    </div>
+
+    <div class="page">
+        <header class="game-header">
+            <a href="index.html" class="back-btn">← Menu</a>
+            <h1 class="game-title">♟ Chess</h1>
+            <div class="header-spacer"></div>
+        </header>
+
+        <div class="game-layout">
+            <!-- Board side -->
+            <div class="board-area">
+                <div class="board-wrapper">
+                    <div class="rank-labels" id="rank-labels"></div>
+                    <div class="chess-board" id="chess-board"></div>
+                </div>
+                <div class="file-labels" id="file-labels"></div>
+            </div>
+
+            <!-- Side panel -->
+            <aside class="side-panel">
+                <div class="status-box">
+                    <div id="status-icon">♟</div>
+                    <div id="status-text">White's Turn</div>
+                </div>
+
+                <div class="captured-section">
+                    <div class="captured-row" id="captured-by-white"></div>
+                    <div class="captured-row" id="captured-by-black"></div>
+                </div>
+
+                <div class="mode-toggle">
+                    <button id="vs-ai-btn" class="mode-btn active">🤖 vs AI</button>
+                    <button id="vs-human-btn" class="mode-btn">👥 2 Players</button>
+                </div>
+
+                <div class="action-row">
+                    <button id="new-game-btn" class="action-btn primary">New Game</button>
+                    <button id="flip-btn" class="action-btn">⇅ Flip</button>
+                </div>
+
+                <div class="move-history-wrap">
+                    <div class="move-history-label">Move History</div>
+                    <div class="move-history" id="move-history"></div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Promotion dialog -->
+        <div id="promo-dialog" class="promo-dialog hidden">
+            <div class="promo-content">
+                <p class="promo-title">Promote Pawn</p>
+                <div class="promo-choices" id="promo-choices"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="chess.js"></script>
+</body>
+
+</html>

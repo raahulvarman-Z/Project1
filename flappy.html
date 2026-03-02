@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flappy Bird</title>
+    <meta name="description" content="A beautiful Flappy Bird game built with HTML5 Canvas and JavaScript." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div id="game-wrapper">
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="overlay">
+            <div class="overlay-content">
+                <div class="bird-logo">🐦</div>
+                <h1 class="game-title">Flappy Bird</h1>
+                <p class="subtitle">Tap or press <kbd>Space</kbd> to jump</p>
+
+                <!-- Theme Selector -->
+                <div class="theme-section">
+                    <p class="theme-label">Choose Theme</p>
+                    <div class="theme-grid" id="theme-grid">
+                        <button class="theme-btn active" data-theme="night" id="theme-night" title="Night Sky">
+                            <span class="theme-preview night-preview"></span>
+                            <span class="theme-name">Night</span>
+                        </button>
+                        <button class="theme-btn" data-theme="tropical" id="theme-tropical" title="Tropical Day">
+                            <span class="theme-preview tropical-preview"></span>
+                            <span class="theme-name">Tropical</span>
+                        </button>
+                        <button class="theme-btn" data-theme="sunset" id="theme-sunset" title="Desert Sunset">
+                            <span class="theme-preview sunset-preview"></span>
+                            <span class="theme-name">Sunset</span>
+                        </button>
+                        <button class="theme-btn" data-theme="neon" id="theme-neon" title="Neon City">
+                            <span class="theme-preview neon-preview"></span>
+                            <span class="theme-name">Neon</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button id="start-btn" class="btn-primary">Play Now</button>
+                <div class="best-score-display">
+                    <span>Best: </span><span id="best-score-start">0</span>
+                </div>
+                <a href="index.html"
+                    style="display:block;font-size:0.8rem;color:rgba(255,255,255,0.35);text-decoration:none;margin-top:8px;transition:color 0.2s;"
+                    onmouseover="this.style.color='rgba(255,255,255,0.7)'"
+                    onmouseout="this.style.color='rgba(255,255,255,0.35)'">← Back to Menu</a>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="overlay hidden">
+            <div class="overlay-content gameover-content">
+                <div class="gameover-icon">💀</div>
+                <h2 class="gameover-title">Game Over!</h2>
+                <div class="score-cards">
+                    <div class="score-card">
+                        <span class="score-label">Score</span>
+                        <span id="final-score" class="score-value">0</span>
+                    </div>
+                    <div class="score-card highlight">
+                        <span class="score-label">Best</span>
+                        <span id="final-best" class="score-value">0</span>
+                    </div>
+                </div>
+                <div id="new-best-badge" class="new-best hidden">🏆 New Best!</div>
+                <button id="restart-btn" class="btn-primary">Play Again</button>
+                <button id="change-theme-btn" class="btn-secondary">Change Theme</button>
+            </div>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div id="score-display">0</div>
+            <a href="index.html"
+                style="position:absolute;top:18px;right:16px;font-size:1.1rem;color:rgba(255,255,255,0.45);text-decoration:none;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:5px 9px;transition:background 0.2s;"
+                title="Main Menu">☰</a>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+
+</html>

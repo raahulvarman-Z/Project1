@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stack Six</title>
+    <meta name="description" content="Stack the falling blocks perfectly in this precision arcade game." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="stack.css" />
+</head>
+
+<body>
+    <div id="game-wrapper">
+        <canvas id="stackCanvas" width="400" height="600"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="overlay">
+            <div class="overlay-content">
+                <div class="stack-logo">🟦</div>
+                <h1 class="game-title">Stack Six</h1>
+                <p class="subtitle">Tap or press <kbd>Space</kbd> to stack</p>
+                <div class="how-to">
+                    <div class="tip">📐 Stack blocks precisely</div>
+                    <div class="tip">⚡ Speed increases as you climb</div>
+                    <div class="tip">💥 Miss completely = Game Over</div>
+                </div>
+                <button id="start-btn" class="btn-primary">Stack Now</button>
+                <div class="best-score-display">
+                    Best: <span id="best-score-start">0</span>
+                </div>
+                <a href="index.html" class="back-link">← Back to Menu</a>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="overlay hidden">
+            <div class="overlay-content gameover-content">
+                <div class="gameover-icon">💥</div>
+                <h2 class="gameover-title">Collapsed!</h2>
+                <div class="score-cards">
+                    <div class="score-card">
+                        <span class="score-label">Score</span>
+                        <span id="final-score" class="score-value">0</span>
+                    </div>
+                    <div class="score-card highlight">
+                        <span class="score-label">Best</span>
+                        <span id="final-best" class="score-value">0</span>
+                    </div>
+                </div>
+                <div id="new-best-badge" class="new-best hidden">🏆 New Best!</div>
+                <button id="restart-btn" class="btn-primary">Try Again</button>
+                <a href="index.html" class="btn-secondary-link">← Main Menu</a>
+            </div>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div id="score-display">0</div>
+            <a href="index.html" id="hud-menu-btn" title="Main Menu">☰</a>
+        </div>
+    </div>
+
+    <script src="stack.js"></script>
+</body>
+
+</html>

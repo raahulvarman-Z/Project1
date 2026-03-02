@@ -263,6 +263,7 @@ function newGame() {
     gameOver = false; aiThinking = false;
     capturedW = []; capturedB = [];
     moveHistory_ = []; lastMove = null; pendingPromo = null;
+    hideGameOver();
     renderAll();
     updateStatus();
 }
@@ -405,18 +406,26 @@ function executeMove(move) {
     renderAll();
     updateStatus();
 
-    // Check game over
+        // Check game over
     const moves = allLegalMoves(board, currentPlayer, castling, ep);
     if (moves.length === 0) {
         gameOver = true;
         const icon = document.getElementById('status-icon');
         const text = document.getElementById('status-text');
         if (inCheck(board, currentPlayer)) {
-            icon.textContent = '👑';
-            text.textContent = (currentPlayer === 'w' ? 'Black' : 'White') + ' wins by checkmate!';
+            const winner = currentPlayer === 'w' ? 'Black' : 'White';
+            const humanWon = !vsAI || winner === 'White';
+            const title = vsAI ? (humanWon ? 'You Win' : 'You Lose') : `${winner} Wins`;
+            const msg = `Checkmate. ${winner} wins the game.`;
+            icon.textContent = '!';
+            text.textContent = msg;
+            showGameOver(humanWon ? 'win' : 'lose', title, msg);
         } else {
-            icon.textContent = '🤝';
-            text.textContent = 'Stalemate — Draw!';
+            const title = 'Draw';
+            const msg = 'Stalemate. No legal moves available.';
+            icon.textContent = '=';
+            text.textContent = msg;
+            showGameOver('draw', title, msg);
         }
         return;
     }
@@ -471,6 +480,25 @@ function showPromoDialog(moves, color) {
     dialog.classList.remove('hidden');
 }
 
+function showGameOver(result, title, msg) {
+    const overlay = document.getElementById('game-over-overlay');
+    const box = document.getElementById('game-over-box');
+    const badge = document.getElementById('game-over-badge');
+    const titleEl = document.getElementById('game-over-title');
+    const msgEl = document.getElementById('game-over-msg');
+
+    box.classList.remove('win', 'lose', 'draw');
+    box.classList.add(result);
+    badge.textContent = result.toUpperCase();
+    titleEl.textContent = title;
+    msgEl.textContent = msg;
+    overlay.classList.remove('hidden');
+}
+
+function hideGameOver() {
+    document.getElementById('game-over-overlay').classList.add('hidden');
+}
+
 // ── Status update ─────────────────────────────────────────────
 function updateStatus() {
     if (gameOver) return;
@@ -523,6 +551,7 @@ function renderMoveHistory() {
 
 // ── Controls ──────────────────────────────────────────────────
 document.getElementById('new-game-btn').addEventListener('click', () => { gameOver = false; newGame(); });
+document.getElementById('result-new-btn').addEventListener('click', () => { gameOver = false; newGame(); });
 document.getElementById('flip-btn').addEventListener('click', () => { flipped = !flipped; renderAll(); });
 document.getElementById('vs-ai-btn').addEventListener('click', () => {
     vsAI = true;

@@ -21,8 +21,8 @@
 
     <div class="page">
         <header class="game-header">
-            <a href="index.html" class="back-btn">← Menu</a>
-            <h1 class="game-title">🔢 Sudoku</h1>
+            <a href="index.html" class="back-btn">&larr; Menu</a>
+            <h1 class="game-title">Sudoku</h1>
             <div id="timer" class="timer">00:00</div>
         </header>
 
@@ -34,8 +34,8 @@
                     <button class="diff-btn" data-diff="hard">Hard</button>
                 </div>
                 <button id="new-puzzle-btn" class="ctrl-btn">New Puzzle</button>
-                <button id="notes-btn" class="ctrl-btn" title="Toggle Notes Mode">✏ Notes</button>
-                <button id="undo-btn" class="ctrl-btn">↩ Undo</button>
+                <button id="notes-btn" class="ctrl-btn" title="Toggle Notes Mode">Notes</button>
+                <button id="undo-btn" class="ctrl-btn">Undo</button>
             </div>
 
             <div class="sudoku-grid" id="sudoku-grid"></div>
@@ -50,7 +50,7 @@
                 <button class="num-key" data-num="7">7</button>
                 <button class="num-key" data-num="8">8</button>
                 <button class="num-key" data-num="9">9</button>
-                <button class="num-key erase-key" data-num="0">⌫</button>
+                <button class="num-key erase-key" data-num="0">Del</button>
             </div>
 
             <div id="mistakes-row" class="mistakes-row">
@@ -63,12 +63,23 @@
         <!-- Win overlay -->
         <div id="win-overlay" class="win-overlay hidden">
             <div class="win-box">
-                <div class="win-icon">🎉</div>
+                <div class="win-icon">WIN</div>
                 <h2 class="win-title">Solved!</h2>
                 <p class="win-time">Time: <span id="win-time-val">00:00</span></p>
-                <div id="win-best-badge" class="win-best hidden">🏆 New Best!</div>
+                <div id="win-best-badge" class="win-best hidden">New Best!</div>
                 <button id="win-new-btn" class="win-btn">New Puzzle</button>
-                <a href="index.html" class="win-link">← Main Menu</a>
+                <a href="index.html" class="win-link">&larr; Main Menu</a>
+            </div>
+        </div>
+
+        <!-- Lose overlay -->
+        <div id="lose-overlay" class="win-overlay hidden">
+            <div class="win-box lose-box">
+                <div class="win-icon">LOSE</div>
+                <h2 class="win-title lose-title">Game Over</h2>
+                <p class="win-time lose-time">You reached 3 mistakes. Try a new puzzle.</p>
+                <button id="lose-new-btn" class="win-btn lose-btn">Try Again</button>
+                <a href="index.html" class="win-link">&larr; Main Menu</a>
             </div>
         </div>
     </div>

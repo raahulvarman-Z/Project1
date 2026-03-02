@@ -225,7 +225,10 @@ function checkWin() {
 function endGame(won) {
     gameWon = true;
     clearInterval(timerInterval);
-    if (!won) { alert('3 mistakes — Game Over! Starting a new puzzle.'); newPuzzle(); return; }
+    if (!won) {
+        document.getElementById('lose-overlay').classList.remove('hidden');
+        return;
+    }
 
     const timeStr = formatTime(timerSec);
     document.getElementById('win-time-val').textContent = timeStr;
@@ -261,6 +264,7 @@ function newPuzzle() {
     undoStack = [];
     document.getElementById('mistakes').textContent = '0';
     document.getElementById('win-overlay').classList.add('hidden');
+    document.getElementById('lose-overlay').classList.add('hidden');
     document.getElementById('notes-btn').classList.remove('notes-active');
 
     // Load best
@@ -303,6 +307,7 @@ document.querySelectorAll('.num-key').forEach(btn => {
 });
 
 document.getElementById('win-new-btn').addEventListener('click', newPuzzle);
+document.getElementById('lose-new-btn').addEventListener('click', newPuzzle);
 
 // Keyboard input
 document.addEventListener('keydown', e => {

@@ -436,3 +436,24 @@ body {
 .win-link:hover {
     color: rgba(255, 255, 255, 0.7);
 }
+.lose-box {
+    border-color: rgba(248, 113, 113, 0.35);
+    box-shadow: 0 20px 60px rgba(127, 29, 29, 0.5);
+}
+
+.lose-title {
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.lose-time {
+    color: rgba(255, 255, 255, 0.72);
+    margin-bottom: 16px;
+}
+
+.lose-btn {
+    background: linear-gradient(135deg, #f97316, #ef4444);
+    color: #fff;
+}

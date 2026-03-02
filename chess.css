@@ -465,6 +465,101 @@ body {
     transform: scale(1.15);
 }
 
+/* ===== Game Over Overlay ===== */
+.game-over-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.76);
+    backdrop-filter: blur(6px);
+    z-index: 110;
+}
+
+.game-over-overlay.hidden {
+    display: none;
+}
+
+.game-over-box {
+    width: min(92vw, 420px);
+    background: rgba(20, 20, 40, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 20px;
+    padding: 28px 28px 22px;
+    text-align: center;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.game-over-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    letter-spacing: 1.2px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: #0d0d1a;
+    background: #fbbf24;
+}
+
+.game-over-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.9rem;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.game-over-msg {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+}
+
+.result-btn {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 999px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #0d0d1a;
+    cursor: pointer;
+    transition: transform 0.15s, filter 0.15s;
+}
+
+.result-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+}
+
+.result-link {
+    display: inline-block;
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.46);
+    font-size: 0.82rem;
+    text-decoration: none;
+}
+
+.result-link:hover {
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.game-over-box.win .game-over-badge {
+    background: #34d399;
+}
+
+.game-over-box.lose .game-over-badge {
+    background: #f87171;
+}
+
+.game-over-box.draw .game-over-badge {
+    background: #93c5fd;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 700px) {
     .game-layout {

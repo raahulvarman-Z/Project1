@@ -195,6 +195,149 @@
       }
       drawS();
     })();
+
+    // Animated preview: Chess
+    (function () {
+      const c = document.getElementById('chess-preview-canvas');
+      const ctx = c.getContext('2d');
+      const W = c.width, H = c.height;
+      const cols = 8, rows = 4;
+      const sq = 28;
+      const boardX = (W - cols * sq) / 2;
+      const boardY = 20;
+      let phase = 0;
+      const trail = [];
+      const from = { x: 1, y: 3 };
+      const to = { x: 4, y: 1 };
+
+      function drawC() {
+        phase += 0.015;
+        const prog = (Math.sin(phase) + 1) * 0.5;
+        ctx.clearRect(0, 0, W, H);
+
+        const bg = ctx.createLinearGradient(0, 0, 0, H);
+        bg.addColorStop(0, '#2d1739');
+        bg.addColorStop(1, '#140d21');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+            const light = (x + y) % 2 === 0;
+            ctx.fillStyle = light ? '#f7e6c6' : '#6a4a7f';
+            ctx.fillRect(boardX + x * sq, boardY + y * sq, sq, sq);
+          }
+        }
+
+        const hx = boardX + to.x * sq;
+        const hy = boardY + to.y * sq;
+        ctx.fillStyle = `rgba(245, 158, 11, ${0.25 + 0.25 * Math.sin(phase * 2)})`;
+        ctx.fillRect(hx, hy, sq, sq);
+
+        const px = boardX + (from.x + (to.x - from.x) * prog) * sq + sq / 2;
+        const py = boardY + (from.y + (to.y - from.y) * prog) * sq + sq / 2;
+
+        trail.push({ x: px, y: py, a: 0.26 });
+        if (trail.length > 8) trail.shift();
+        trail.forEach((dot, i) => {
+          ctx.fillStyle = `rgba(251,191,36,${dot.a * (i / trail.length)})`;
+          ctx.beginPath();
+          ctx.arc(dot.x, dot.y + 8, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.font = 'bold 24px Nunito';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillText('♞', px, py);
+
+        ctx.fillStyle = '#1f2937';
+        ctx.fillText('♚', boardX + 6.5 * sq, boardY + 0.7 * sq);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '700 11px Nunito';
+        ctx.fillText('CHECK TACTIC', W / 2, H - 12);
+
+        requestAnimationFrame(drawC);
+      }
+
+      drawC();
+    })();
+
+    // Animated preview: Sudoku
+    (function () {
+      const c = document.getElementById('sudoku-preview-canvas');
+      const ctx = c.getContext('2d');
+      const W = c.width, H = c.height;
+      const size = 18;
+      const gX = (W - size * 9) / 2;
+      const gY = 10;
+      let step = 0;
+      const fills = [
+        { r: 0, c: 0, n: 5 }, { r: 0, c: 4, n: 7 }, { r: 1, c: 3, n: 1 },
+        { r: 1, c: 8, n: 9 }, { r: 2, c: 2, n: 8 }, { r: 3, c: 5, n: 9 },
+        { r: 4, c: 4, n: 4 }, { r: 5, c: 0, n: 7 }, { r: 6, c: 6, n: 2 },
+        { r: 7, c: 1, n: 3 }, { r: 7, c: 7, n: 8 }, { r: 8, c: 8, n: 6 }
+      ];
+
+      function drawU() {
+        step += 0.05;
+        const reveal = Math.floor((step * 2.5) % (fills.length + 6));
+
+        ctx.clearRect(0, 0, W, H);
+
+        const bg = ctx.createLinearGradient(0, 0, 0, H);
+        bg.addColorStop(0, '#123f3a');
+        bg.addColorStop(1, '#08211f');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.fillStyle = 'rgba(16,185,129,0.16)';
+        ctx.fillRect(gX + 3 * size, gY + 3 * size, 3 * size, 3 * size);
+
+        for (let i = 0; i <= 9; i++) {
+          const thick = i % 3 === 0;
+          ctx.strokeStyle = thick ? 'rgba(236,253,245,0.7)' : 'rgba(236,253,245,0.25)';
+          ctx.lineWidth = thick ? 1.8 : 1;
+          ctx.beginPath();
+          ctx.moveTo(gX + i * size, gY);
+          ctx.lineTo(gX + i * size, gY + size * 9);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(gX, gY + i * size);
+          ctx.lineTo(gX + size * 9, gY + i * size);
+          ctx.stroke();
+        }
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '700 12px Nunito';
+
+        fills.forEach((cell, i) => {
+          if (i > reveal) return;
+          const x = gX + cell.c * size + size / 2;
+          const y = gY + cell.r * size + size / 2;
+          const isActive = i === reveal % fills.length;
+          ctx.fillStyle = isActive ? '#d9f99d' : '#f0fdfa';
+          ctx.fillText(String(cell.n), x, y);
+          if (isActive) {
+            ctx.strokeStyle = 'rgba(217,249,157,0.8)';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(gX + cell.c * size + 1, gY + cell.r * size + 1, size - 2, size - 2);
+          }
+        });
+
+        ctx.fillStyle = '#ecfeff';
+        ctx.font = '700 11px Nunito';
+        ctx.fillText('SOLVING...', W / 2, H - 8);
+
+        requestAnimationFrame(drawU);
+      }
+
+      drawU();
+    })();
   </script>
 </body>
 

@@ -4,6 +4,59 @@
 
 const DIFF = { easy: 46, medium: 36, hard: 26 }; // given cells
 
+const SudokuAudioCtx = window.AudioContext || window.webkitAudioContext;
+let sudokuAudioCtx = null;
+
+function getSudokuAudioCtx() {
+    if (!SudokuAudioCtx) return null;
+    if (!sudokuAudioCtx) sudokuAudioCtx = new SudokuAudioCtx();
+    return sudokuAudioCtx;
+}
+
+function unlockSudokuAudio() {
+    const ctx = getSudokuAudioCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+
+function playSudokuTone(freq, duration, type, volume, endFreq = null) {
+    const ctx = getSudokuAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (endFreq) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), now + duration);
+    }
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.03);
+}
+
+function playSudokuUiSound() { playSudokuTone(520, 0.08, 'triangle', 0.025, 760); }
+function playSudokuSelectSound() { playSudokuTone(650, 0.05, 'sine', 0.02, 560); }
+function playSudokuNoteSound() { playSudokuTone(780, 0.05, 'triangle', 0.02, 900); }
+function playSudokuPlaceSound() { playSudokuTone(460, 0.08, 'triangle', 0.028, 620); }
+function playSudokuClearSound() { playSudokuTone(300, 0.06, 'sine', 0.02, 240); }
+function playSudokuErrorSound() { playSudokuTone(250, 0.12, 'sawtooth', 0.045, 140); }
+function playSudokuUndoSound() { playSudokuTone(400, 0.07, 'triangle', 0.024, 300); }
+function playSudokuWinSound() {
+    playSudokuTone(760, 0.1, 'triangle', 0.03, 980);
+    setTimeout(() => playSudokuTone(980, 0.14, 'triangle', 0.03, 1240), 70);
+}
+function playSudokuLoseSound() {
+    playSudokuTone(230, 0.18, 'sawtooth', 0.05, 110);
+    setTimeout(() => playSudokuTone(170, 0.2, 'sine', 0.04, 70), 65);
+}
+
 // ── Puzzle generation ─────────────────────────────────────────
 function generateSolved() {
     const grid = Array(9).fill(null).map(() => Array(9).fill(0));
@@ -170,20 +223,27 @@ function renderGrid() {
 }
 
 function selectCell(r, c) {
+    unlockSudokuAudio();
+    playSudokuSelectSound();
     selected = [r, c];
     renderGrid();
 }
 
 // ── Place number ──────────────────────────────────────────────
 function placeNumber(num) {
+    unlockSudokuAudio();
     if (!selected || gameWon) return;
     const [r, c] = selected;
-    if (given[r][c]) return;
+    if (given[r][c]) {
+        playSudokuErrorSound();
+        return;
+    }
 
     if (notesMode && num !== 0) {
         undoStack.push({ type: 'note', r, c, notesBefore: new Set(notes[r][c]) });
         if (notes[r][c].has(num)) notes[r][c].delete(num);
         else notes[r][c].add(num);
+        playSudokuNoteSound();
         renderGrid();
         return;
     }
@@ -194,9 +254,14 @@ function placeNumber(num) {
     if (num !== 0) notes[r][c].clear();
 
     if (num !== 0 && num !== solution[r][c]) {
+        playSudokuErrorSound();
         mistakes++;
         document.getElementById('mistakes').textContent = mistakes;
         if (mistakes >= 3) endGame(false);
+    } else if (num === 0) {
+        playSudokuClearSound();
+    } else {
+        playSudokuPlaceSound();
     }
 
     renderGrid();
@@ -204,6 +269,7 @@ function placeNumber(num) {
 }
 
 function undo() {
+    unlockSudokuAudio();
     if (!undoStack.length) return;
     const action = undoStack.pop();
     if (action.type === 'fill') {
@@ -212,6 +278,7 @@ function undo() {
     } else if (action.type === 'note') {
         notes[action.r][action.c] = action.notesBefore;
     }
+    playSudokuUndoSound();
     renderGrid();
 }
 
@@ -226,6 +293,7 @@ function endGame(won) {
     gameWon = true;
     clearInterval(timerInterval);
     if (!won) {
+        playSudokuLoseSound();
         document.getElementById('lose-overlay').classList.remove('hidden');
         return;
     }
@@ -241,6 +309,7 @@ function endGame(won) {
         document.getElementById('best-time').textContent = timeStr;
         isNew = true;
     }
+    playSudokuWinSound();
     document.getElementById('win-best-badge').classList.toggle('hidden', !isNew);
     document.getElementById('win-overlay').classList.remove('hidden');
 }
@@ -286,6 +355,8 @@ function newPuzzle() {
 // ── Controls ──────────────────────────────────────────────────
 document.querySelectorAll('.diff-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+        unlockSudokuAudio();
+        playSudokuUiSound();
         document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         difficulty = btn.dataset.diff;
@@ -293,33 +364,66 @@ document.querySelectorAll('.diff-btn').forEach(btn => {
     });
 });
 
-document.getElementById('new-puzzle-btn').addEventListener('click', newPuzzle);
+document.getElementById('new-puzzle-btn').addEventListener('click', () => {
+    unlockSudokuAudio();
+    playSudokuUiSound();
+    newPuzzle();
+});
 
 document.getElementById('notes-btn').addEventListener('click', () => {
+    unlockSudokuAudio();
     notesMode = !notesMode;
     document.getElementById('notes-btn').classList.toggle('notes-active', notesMode);
+    playSudokuNoteSound();
 });
 
-document.getElementById('undo-btn').addEventListener('click', undo);
+document.getElementById('undo-btn').addEventListener('click', () => {
+    unlockSudokuAudio();
+    undo();
+});
 
 document.querySelectorAll('.num-key').forEach(btn => {
-    btn.addEventListener('click', () => placeNumber(+btn.dataset.num));
+    btn.addEventListener('click', () => {
+        unlockSudokuAudio();
+        placeNumber(+btn.dataset.num);
+    });
 });
 
-document.getElementById('win-new-btn').addEventListener('click', newPuzzle);
-document.getElementById('lose-new-btn').addEventListener('click', newPuzzle);
+document.getElementById('win-new-btn').addEventListener('click', () => {
+    unlockSudokuAudio();
+    playSudokuUiSound();
+    newPuzzle();
+});
+document.getElementById('lose-new-btn').addEventListener('click', () => {
+    unlockSudokuAudio();
+    playSudokuUiSound();
+    newPuzzle();
+});
 
 // Keyboard input
 document.addEventListener('keydown', e => {
-    if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(e.key)) placeNumber(+e.key);
-    if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') placeNumber(0);
+    if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(e.key)) {
+        unlockSudokuAudio();
+        placeNumber(+e.key);
+    }
+    if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+        unlockSudokuAudio();
+        placeNumber(0);
+    }
     if (e.key === 'n' || e.key === 'N') {
+        unlockSudokuAudio();
         notesMode = !notesMode;
         document.getElementById('notes-btn').classList.toggle('notes-active', notesMode);
+        playSudokuNoteSound();
     }
-    if (e.code === 'KeyZ' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
+    if (e.code === 'KeyZ' && (e.ctrlKey || e.metaKey)) {
+        unlockSudokuAudio();
+        e.preventDefault();
+        undo();
+    }
     // Arrow key navigation
     if (selected && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        unlockSudokuAudio();
         e.preventDefault();
         let [r, c] = selected;
         if (e.key === 'ArrowUp') r = Math.max(0, r - 1);

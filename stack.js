@@ -33,6 +33,62 @@ const COLORS = [
 ];
 
 // ── State ─────────────────────────────────────────────────────
+const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function getAudioCtx() {
+    if (!AudioCtxClass) return null;
+    if (!audioCtx) audioCtx = new AudioCtxClass();
+    return audioCtx;
+}
+
+function unlockAudio() {
+    const ctx = getAudioCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+
+function playTone(freq, duration, type, volume, endFreq = null) {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (endFreq) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), now + duration);
+    }
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.03);
+}
+
+function playUiSound() {
+    playTone(520, 0.08, 'triangle', 0.03, 760);
+}
+
+function playStackSound(isPerfect) {
+    if (isPerfect) {
+        playTone(880, 0.08, 'square', 0.03, 1200);
+        setTimeout(() => playTone(1200, 0.08, 'triangle', 0.025, 1500), 55);
+        return;
+    }
+    const pitch = Math.min(380 + score * 6, 720);
+    playTone(pitch, 0.07, 'triangle', 0.028, pitch - 120);
+}
+
+function playGameOverSound() {
+    playTone(220, 0.18, 'sawtooth', 0.055, 90);
+    setTimeout(() => playTone(160, 0.22, 'sine', 0.04, 60), 60);
+}
+
 let state = 'start';
 let score = 0;
 let bestScore = parseInt(localStorage.getItem('stack_best') || '0');
@@ -116,6 +172,7 @@ function stackBlock() {
     blocks.push({ x: placedX, w: placedW, colorIdx: mover.colorIdx });
     score++;
     scoreDisplay.textContent = score;
+    playStackSound(isPerfect);
 
     // Perfect flash
     if (isPerfect) flashPerfect(placedX, blockY(blocks.length - 1), placedW);
@@ -154,6 +211,7 @@ function startGame() {
 
 function doGameOver() {
     state = 'dead';
+    playGameOverSound();
     let isNew = false;
     if (score > bestScore) {
         bestScore = score;
@@ -426,20 +484,36 @@ function loop(ts) {
 
 // ── Input ─────────────────────────────────────────────────────
 function onTap() {
-    if (state === 'start') { startGame(); return; }
+    unlockAudio();
+    if (state === 'start') {
+        playUiSound();
+        startGame();
+        return;
+    }
     if (state === 'playing') stackBlock();
 }
 
 document.addEventListener('keydown', e => {
     if (e.code === 'Space' || e.code === 'ArrowDown' || e.code === 'Enter') {
         e.preventDefault();
+        unlockAudio();
         onTap();
     }
 });
-canvas.addEventListener('pointerdown', e => { e.preventDefault(); onTap(); });
+canvas.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    unlockAudio();
+    onTap();
+});
 
-startBtn.addEventListener('click', startGame);
+startBtn.addEventListener('click', () => {
+    unlockAudio();
+    playUiSound();
+    startGame();
+});
 restartBtn.addEventListener('click', () => {
+    unlockAudio();
+    playUiSound();
     gameoverScreen.classList.add('hidden');
     startGame();
 });

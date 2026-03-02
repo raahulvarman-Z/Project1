@@ -11,6 +11,68 @@ const UNI = {
 // ── Piece values (centipawns) ─────────────────────────────────
 const VAL = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
 
+const ChessAudioCtx = window.AudioContext || window.webkitAudioContext;
+let chessAudioCtx = null;
+
+function getChessAudioCtx() {
+    if (!ChessAudioCtx) return null;
+    if (!chessAudioCtx) chessAudioCtx = new ChessAudioCtx();
+    return chessAudioCtx;
+}
+
+function unlockChessAudio() {
+    const ctx = getChessAudioCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+
+function playChessTone(freq, duration, type, volume, endFreq = null) {
+    const ctx = getChessAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (endFreq) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), now + duration);
+    }
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.03);
+}
+
+function playChessUiSound() { playChessTone(560, 0.07, 'triangle', 0.025, 760); }
+function playChessSelectSound() { playChessTone(700, 0.05, 'sine', 0.02, 620); }
+function playChessMoveSound() { playChessTone(440, 0.08, 'triangle', 0.03, 560); }
+function playChessCaptureSound() { playChessTone(320, 0.11, 'sawtooth', 0.04, 190); }
+function playChessCastleSound() {
+    playChessTone(460, 0.07, 'triangle', 0.028, 600);
+    setTimeout(() => playChessTone(620, 0.07, 'triangle', 0.022, 760), 50);
+}
+function playChessCheckSound() { playChessTone(980, 0.07, 'square', 0.03, 820); }
+function playChessPromoteSound() { playChessTone(820, 0.1, 'triangle', 0.03, 1300); }
+function playChessGameOverSound(result) {
+    if (result === 'win') {
+        playChessTone(720, 0.1, 'triangle', 0.03, 980);
+        setTimeout(() => playChessTone(980, 0.12, 'triangle', 0.03, 1240), 70);
+        return;
+    }
+    if (result === 'lose') {
+        playChessTone(260, 0.16, 'sawtooth', 0.05, 120);
+        setTimeout(() => playChessTone(180, 0.18, 'sine', 0.04, 80), 65);
+        return;
+    }
+    playChessTone(420, 0.09, 'triangle', 0.025, 420);
+    setTimeout(() => playChessTone(520, 0.09, 'triangle', 0.02, 520), 60);
+}
+
 // ── Piece-square tables (white perspective, row0=rank8) ───────
 const PST = {
     p: [[0, 0, 0, 0, 0, 0, 0, 0], [50, 50, 50, 50, 50, 50, 50, 50], [10, 10, 20, 30, 30, 20, 10, 10], [5, 5, 10, 25, 25, 10, 5, 5], [0, 0, 0, 20, 20, 0, 0, 0], [5, -5, -10, 0, 0, -10, -5, 5], [5, 10, 10, -20, -20, 10, 10, 5], [0, 0, 0, 0, 0, 0, 0, 0]],
@@ -339,6 +401,7 @@ function updateCells() {
 }
 
 function handleClick(r, c) {
+    unlockChessAudio();
     if (gameOver || aiThinking || pendingPromo) return;
     if (vsAI && currentPlayer === 'b') return;
 
@@ -362,6 +425,7 @@ function handleClick(r, c) {
         if (piece && piece.c === currentPlayer) {
             selected = [r, c];
             legalMoves = getLegalMoves(board, r, c, castling, ep);
+            playChessSelectSound();
             updateCells();
             return;
         }
@@ -374,14 +438,21 @@ function handleClick(r, c) {
     if (piece && piece.c === currentPlayer) {
         selected = [r, c];
         legalMoves = getLegalMoves(board, r, c, castling, ep);
+        playChessSelectSound();
         updateCells();
     }
 }
 
 function executeMove(move) {
+    unlockChessAudio();
+    const movingPiece = board[move.fr][move.fc];
     const captured = board[move.tr][move.tc];
+    const isEnPassantCapture = movingPiece?.t === 'p' && ep && move.tr === ep[0] && move.tc === ep[1] && !captured;
+    const isCaptureMove = !!captured || isEnPassantCapture;
+    const isCastleMove = !!move.castle;
+    const isPromotionMove = !!move.promo;
     // En passant capture
-    if (board[move.fr][move.fc]?.t === 'p' && ep && move.tr === ep[0] && move.tc === ep[1]) {
+    if (movingPiece?.t === 'p' && ep && move.tr === ep[0] && move.tc === ep[1]) {
         const capRow = currentPlayer === 'w' ? move.tr + 1 : move.tr - 1;
         if (board[capRow][move.tc]) {
             if (currentPlayer === 'w') capturedW.push(board[capRow][move.tc]);
@@ -402,6 +473,11 @@ function executeMove(move) {
 
     selected = null; legalMoves = [];
     currentPlayer = opp(currentPlayer);
+
+    if (isCastleMove) playChessCastleSound();
+    else if (isCaptureMove) playChessCaptureSound();
+    else playChessMoveSound();
+    if (isPromotionMove) setTimeout(playChessPromoteSound, 45);
 
     renderAll();
     updateStatus();
@@ -432,6 +508,7 @@ function executeMove(move) {
     if (inCheck(board, currentPlayer)) {
         const text = document.getElementById('status-text');
         text.textContent = (currentPlayer === 'w' ? 'White' : 'Black') + ' is in Check!';
+        playChessCheckSound();
     }
 
     // AI move
@@ -472,6 +549,8 @@ function showPromoDialog(moves, color) {
         btn.className = 'promo-piece-btn';
         btn.textContent = UNI[color + t];
         btn.addEventListener('click', () => {
+            unlockChessAudio();
+            playChessUiSound();
             const move = moves.find(m => m.promo === t);
             if (move) { dialog.classList.add('hidden'); pendingPromo = null; executeMove(move); }
         });
@@ -481,6 +560,7 @@ function showPromoDialog(moves, color) {
 }
 
 function showGameOver(result, title, msg) {
+    unlockChessAudio();
     const overlay = document.getElementById('game-over-overlay');
     const box = document.getElementById('game-over-box');
     const badge = document.getElementById('game-over-badge');
@@ -493,6 +573,7 @@ function showGameOver(result, title, msg) {
     titleEl.textContent = title;
     msgEl.textContent = msg;
     overlay.classList.remove('hidden');
+    playChessGameOverSound(result);
 }
 
 function hideGameOver() {
@@ -550,16 +631,35 @@ function renderMoveHistory() {
 }
 
 // ── Controls ──────────────────────────────────────────────────
-document.getElementById('new-game-btn').addEventListener('click', () => { gameOver = false; newGame(); });
-document.getElementById('result-new-btn').addEventListener('click', () => { gameOver = false; newGame(); });
-document.getElementById('flip-btn').addEventListener('click', () => { flipped = !flipped; renderAll(); });
+document.getElementById('new-game-btn').addEventListener('click', () => {
+    unlockChessAudio();
+    playChessUiSound();
+    gameOver = false;
+    newGame();
+});
+document.getElementById('result-new-btn').addEventListener('click', () => {
+    unlockChessAudio();
+    playChessUiSound();
+    gameOver = false;
+    newGame();
+});
+document.getElementById('flip-btn').addEventListener('click', () => {
+    unlockChessAudio();
+    playChessUiSound();
+    flipped = !flipped;
+    renderAll();
+});
 document.getElementById('vs-ai-btn').addEventListener('click', () => {
+    unlockChessAudio();
+    playChessUiSound();
     vsAI = true;
     document.getElementById('vs-ai-btn').classList.add('active');
     document.getElementById('vs-human-btn').classList.remove('active');
     newGame();
 });
 document.getElementById('vs-human-btn').addEventListener('click', () => {
+    unlockChessAudio();
+    playChessUiSound();
     vsAI = false;
     document.getElementById('vs-human-btn').classList.add('active');
     document.getElementById('vs-ai-btn').classList.remove('active');
@@ -568,9 +668,22 @@ document.getElementById('vs-human-btn').addEventListener('click', () => {
 
 // Keyboard
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { selected = null; legalMoves = []; updateCells(); }
-    if (e.code === 'KeyN') newGame();
-    if (e.code === 'KeyF') { flipped = !flipped; renderAll(); }
+    unlockChessAudio();
+    if (e.key === 'Escape') {
+        selected = null;
+        legalMoves = [];
+        playChessUiSound();
+        updateCells();
+    }
+    if (e.code === 'KeyN') {
+        playChessUiSound();
+        newGame();
+    }
+    if (e.code === 'KeyF') {
+        playChessUiSound();
+        flipped = !flipped;
+        renderAll();
+    }
 });
 
 // ── Init ──────────────────────────────────────────────────────

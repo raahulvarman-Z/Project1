@@ -30,6 +30,60 @@ const PIPE_INTERVAL = 1700;
 const GROUND_H = 80;
 const PIPE_W = 60;
 
+const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function getAudioCtx() {
+    if (!AudioCtxClass) return null;
+    if (!audioCtx) audioCtx = new AudioCtxClass();
+    return audioCtx;
+}
+
+function unlockAudio() {
+    const ctx = getAudioCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+
+function playTone(freq, duration, type, volume, endFreq = null) {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (endFreq) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), now + duration);
+    }
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.03);
+}
+
+function playUiSound() {
+    playTone(520, 0.08, 'triangle', 0.03, 760);
+}
+
+function playFlapSound() {
+    playTone(640, 0.09, 'triangle', 0.04, 390);
+}
+
+function playScoreSound() {
+    playTone(880, 0.11, 'square', 0.035, 1240);
+}
+
+function playGameOverSound() {
+    playTone(240, 0.18, 'sawtooth', 0.055, 95);
+    setTimeout(() => playTone(180, 0.2, 'sine', 0.04, 70), 60);
+}
+
 // ── THEMES ───────────────────────────────────────────────────
 const THEMES = {
     night: {
@@ -224,7 +278,11 @@ function selectTheme(key) {
 
 // Attach theme button listeners
 document.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.addEventListener('click', () => selectTheme(btn.dataset.theme));
+    btn.addEventListener('click', () => {
+        unlockAudio();
+        playUiSound();
+        selectTheme(btn.dataset.theme);
+    });
 });
 
 // Set initial active via saved preference
@@ -241,7 +299,14 @@ function resetGame() {
 
 function flap() {
     if (state === 'dead') return;
-    if (state === 'start') { startGame(); return; }
+    if (state === 'start') {
+        unlockAudio();
+        playUiSound();
+        startGame();
+        return;
+    }
+    unlockAudio();
+    playFlapSound();
     bird.vy = FLAP_STRENGTH;
     bird.rotation = -0.4;
     spawnParticles(bird.x + bird.w / 2, bird.y + bird.h / 2);
@@ -298,6 +363,7 @@ function startGame() {
 
 function gameOver() {
     state = 'dead';
+    playGameOverSound();
     let isNew = false;
     if (score > bestScore) {
         bestScore = score;
@@ -345,6 +411,7 @@ function update(dt) {
         if (!p.scored && p.x + PIPE_W < bird.x) {
             p.scored = true; score++;
             scoreDisplay.textContent = score;
+            playScoreSound();
         }
         if (p.x + PIPE_W < -20) pipes.splice(i, 1);
     }
@@ -720,16 +787,32 @@ function render() {
 
 // ── Input ─────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-    if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); flap(); }
+    if (e.code === 'Space' || e.code === 'ArrowUp') {
+        e.preventDefault();
+        unlockAudio();
+        flap();
+    }
 });
-canvas.addEventListener('pointerdown', e => { e.preventDefault(); flap(); });
+canvas.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    unlockAudio();
+    flap();
+});
 
-startBtn.addEventListener('click', startGame);
+startBtn.addEventListener('click', () => {
+    unlockAudio();
+    playUiSound();
+    startGame();
+});
 restartBtn.addEventListener('click', () => {
+    unlockAudio();
+    playUiSound();
     gameoverScreen.classList.add('hidden');
     startGame();
 });
 changeThemeBtn.addEventListener('click', () => {
+    unlockAudio();
+    playUiSound();
     gameoverScreen.classList.add('hidden');
     startScreen.classList.remove('hidden');
 });

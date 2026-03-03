@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sky Sprint</title>
+    <meta name="description" content="Run, jump, collect coins, and reach the flag in this platform game." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;700;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="mario.css" />
+</head>
+
+<body>
+    <div class="page">
+        <header class="top-bar">
+            <a class="back-btn" href="index.html">&larr; Menu</a>
+            <h1>Sky Sprint</h1>
+            <button id="start-btn" class="start-btn">Start Run</button>
+        </header>
+
+        <section class="select-wrap">
+            <p class="select-title">Choose Your Character</p>
+            <div class="char-grid" id="char-grid">
+                <button class="char-option active" data-char="blaze">
+                    <span class="char-icon blaze"></span>
+                    <span class="char-name">Blaze</span>
+                </button>
+                <button class="char-option" data-char="nova">
+                    <span class="char-icon nova"></span>
+                    <span class="char-name">Nova</span>
+                </button>
+                <button class="char-option" data-char="mint">
+                    <span class="char-icon mint"></span>
+                    <span class="char-name">Mint</span>
+                </button>
+            </div>
+        </section>
+
+        <section class="hud">
+            <div class="hud-pill">Hero: <span id="hud-hero">Blaze</span></div>
+            <div class="hud-pill">Coins: <span id="hud-coins">0</span></div>
+            <div class="hud-pill">Lives: <span id="hud-lives">3</span></div>
+            <div class="hud-pill">Distance: <span id="hud-distance">0m</span></div>
+            <div class="hud-pill">Score: <span id="hud-score">0</span></div>
+        </section>
+
+        <section class="game-shell">
+            <canvas id="runner-canvas" width="960" height="540" aria-label="Sky Sprint game canvas"></canvas>
+            <div id="game-overlay" class="game-overlay">
+                <h2 id="overlay-title">Sky Sprint</h2>
+                <p id="overlay-text">Select a character, then click Start Run.</p>
+                <button id="overlay-btn" class="overlay-btn">Start Run</button>
+            </div>
+        </section>
+
+        <section class="help">
+            <p>Controls: Left/Right or A/D to move. Up/Space/W to jump.</p>
+        </section>
+
+        <section class="touch-controls">
+            <button class="touch-btn" data-action="left">Left</button>
+            <button class="touch-btn" data-action="jump">Jump</button>
+            <button class="touch-btn" data-action="right">Right</button>
+        </section>
+    </div>
+
+    <script src="mario.js"></script>
+</body>
+
+</html>

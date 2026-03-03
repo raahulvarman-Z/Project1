@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Game Hub</title>
-  <meta name="description" content="Play Flappy Bird and Stack — two addictive browser games." />
+  <meta name="description" content="Play addictive browser games here" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap"
@@ -98,6 +98,24 @@
             <span class="tag">3 Levels</span>
           </div>
           <div class="card-cta">Play Now →</div>
+        </div>
+      </a>
+
+      <!-- Sky Sprint Card -->
+      <a href="mario.html" class="game-card" id="card-mario">
+        <div class="card-glow mario-glow"></div>
+        <div class="card-preview mario-preview">
+          <canvas id="mario-preview-canvas" width="280" height="160"></canvas>
+        </div>
+        <div class="card-body">
+          <div class="card-icon">RUN</div>
+          <h2 class="card-title">Sky Sprint</h2>
+          <p class="card-desc">Platform runner action with character select, coins, enemies, and a finish flag.</p>
+          <div class="card-tags">
+            <span class="tag">Platformer</span>
+            <span class="tag">Character Select</span>
+          </div>
+          <div class="card-cta">Play Now -&gt;</div>
         </div>
       </a>
 
@@ -337,6 +355,72 @@
       }
 
       drawU();
+    })();
+
+    // Animated preview: Sky Sprint
+    (function () {
+      const c = document.getElementById('mario-preview-canvas');
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const W = c.width, H = c.height;
+      let t = 0;
+      const coins = [120, 155, 190, 225];
+
+      function drawM() {
+        t += 0.04;
+        ctx.clearRect(0, 0, W, H);
+
+        const sky = ctx.createLinearGradient(0, 0, 0, H);
+        sky.addColorStop(0, '#60a5fa');
+        sky.addColorStop(1, '#1d4ed8');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+        ctx.beginPath();
+        ctx.ellipse(80 - (t * 12 % 320), 40, 44, 16, 0, 0, Math.PI * 2);
+        ctx.ellipse(220 - (t * 8 % 320), 26, 38, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#7c3f1d';
+        ctx.fillRect(0, 128, W, 32);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(0, 122, W, 8);
+
+        const pX = 64 + Math.sin(t * 2) * 8;
+        const pY = 98 + Math.sin(t * 4) * 2;
+        ctx.fillStyle = '#f97316';
+        ctx.fillRect(pX + 4, pY + 12, 18, 18);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(pX + 3, pY + 4, 20, 10);
+        ctx.fillStyle = '#ffd8a8';
+        ctx.fillRect(pX + 8, pY + 12, 10, 9);
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(pX + 10, pY + 15, 2, 2);
+        ctx.fillRect(pX + 15, pY + 15, 2, 2);
+
+        const bob = Math.sin(t * 6);
+        for (let i = 0; i < coins.length; i++) {
+          const cx = coins[i] - (t * 45 % 320);
+          if (cx < -20) continue;
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          ctx.arc(cx, 94 + Math.sin(t * 5 + i) * 2 + bob, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = '#fef3c7';
+        ctx.font = '700 10px Nunito';
+        ctx.textAlign = 'center';
+        ctx.fillText('RUN TO THE FLAG', W / 2, 150);
+
+        requestAnimationFrame(drawM);
+      }
+
+      drawM();
     })();
   </script>
 </body>

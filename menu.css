@@ -189,6 +189,11 @@ body {
         0 0 40px rgba(16, 185, 129, 0.2);
 }
 
+.mario-glow {
+    box-shadow: inset 0 0 50px rgba(249, 115, 22, 0.16),
+        0 0 40px rgba(249, 115, 22, 0.22);
+}
+
 .game-card:hover #card-flappy,
 #card-flappy:hover {
     box-shadow: 0 20px 60px rgba(251, 191, 36, 0.25);
@@ -209,6 +214,11 @@ body {
     box-shadow: 0 20px 60px rgba(16, 185, 129, 0.24);
 }
 
+.game-card:hover #card-mario,
+#card-mario:hover {
+    box-shadow: 0 20px 60px rgba(249, 115, 22, 0.24);
+}
+
 #card-flappy:hover {
     box-shadow: 0 20px 60px rgba(251, 191, 36, 0.3);
 }
@@ -223,6 +233,10 @@ body {
 
 #card-sudoku:hover {
     box-shadow: 0 20px 60px rgba(16, 185, 129, 0.3);
+}
+
+#card-mario:hover {
+    box-shadow: 0 20px 60px rgba(249, 115, 22, 0.3);
 }
 
 /* Canvas Preview */
@@ -253,6 +267,10 @@ body {
 
 .sudoku-preview {
     background: #0f2b2a;
+}
+
+.mario-preview {
+    background: #1f3f78;
 }
 
 /* Card Body */
@@ -328,6 +346,10 @@ body {
 
 #card-sudoku:hover .card-cta {
     color: #10b981;
+}
+
+#card-mario:hover .card-cta {
+    color: #f97316;
 }
 
 /* ===== Footer ===== */

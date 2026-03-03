@@ -549,12 +549,17 @@ function executeMove(move) {
     board = result.board; castling = result.castling; ep = result.ep;
     lastMove = move;
 
-    const piece = board[move.tr][move.tc];
-    const notation = moveToNotation(move, piece);
-    moveHistory_.push({ notation, color: currentPlayer });
-
     selected = null; legalMoves = [];
     currentPlayer = opp(currentPlayer);
+    const moves = allLegalMoves(board, currentPlayer, castling, ep);
+    const opponentInCheck = inCheck(board, currentPlayer);
+    const isMate = opponentInCheck && moves.length === 0;
+    const moveRecord = moveToNotation(move, movingPiece, {
+        isCapture: isCaptureMove,
+        isCheck: opponentInCheck,
+        isMate
+    });
+    moveHistory_.push({ ...moveRecord, color: movingPiece.c });
 
     if (isCastleMove) playChessCastleSound();
     else if (isCaptureMove) playChessCaptureSound();
@@ -564,13 +569,12 @@ function executeMove(move) {
     renderAll();
     updateStatus();
 
-        // Check game over
-    const moves = allLegalMoves(board, currentPlayer, castling, ep);
+    // Check game over
     if (moves.length === 0) {
         gameOver = true;
         const icon = document.getElementById('status-icon');
         const text = document.getElementById('status-text');
-        if (inCheck(board, currentPlayer)) {
+        if (opponentInCheck) {
             const winner = currentPlayer === 'w' ? 'Black' : 'White';
             const humanWon = !vsAI || winner === 'White';
             const title = vsAI ? (humanWon ? 'You Win' : 'You Lose') : `${winner} Wins`;
@@ -587,7 +591,7 @@ function executeMove(move) {
         }
         return;
     }
-    if (inCheck(board, currentPlayer)) {
+    if (opponentInCheck) {
         const text = document.getElementById('status-text');
         text.textContent = (currentPlayer === 'w' ? 'White' : 'Black') + ' is in Check!';
         playChessCheckSound();
@@ -620,16 +624,38 @@ function scheduleAI() {
     }, getAiThinkDelay(aiLevel));
 }
 
-function moveToNotation(move, piece) {
+function moveToNotation(move, piece, flags) {
     const files = 'abcdefgh';
     const ranks = '87654321';
     const fromSq = files[move.fc] + ranks[move.fr];
     const toSq = files[move.tc] + ranks[move.tr];
-    const cap = board[move.tr][move.tc] ? 'x' : '';
-    const promo = move.promo ? '=' + move.promo.toUpperCase() : '';
-    if (move.castle) return move.castle === 'k' ? 'O-O' : 'O-O-O';
-    const pName = piece?.t === 'p' ? (cap ? files[move.fc] : '') : piece?.t?.toUpperCase() || '';
-    return `${pName}${cap}${toSq}${promo}`;
+    const pieceType = piece?.t || 'p';
+    const names = { p: 'Pawn', n: 'Knight', b: 'Bishop', r: 'Rook', q: 'Queen', k: 'King' };
+    const letters = { p: '', n: 'N', b: 'B', r: 'R', q: 'Q', k: 'K' };
+
+    if (move.castle) {
+        const san = move.castle === 'k' ? 'O-O' : 'O-O-O';
+        const suffix = flags.isMate ? '#' : flags.isCheck ? '+' : '';
+        const detail = move.castle === 'k' ? 'King castles king side' : 'King castles queen side';
+        return { san: san + suffix, detail };
+    }
+
+    const captureToken = flags.isCapture ? 'x' : '';
+    let san;
+    if (pieceType === 'p') {
+        const pawnPrefix = flags.isCapture ? files[move.fc] : '';
+        san = `${pawnPrefix}${captureToken}${toSq}`;
+    } else {
+        san = `${letters[pieceType]}${captureToken}${toSq}`;
+    }
+    if (move.promo) san += `=${move.promo.toUpperCase()}`;
+    if (flags.isMate) san += '#';
+    else if (flags.isCheck) san += '+';
+
+    const verb = flags.isCapture ? 'captures on' : 'to';
+    const promoText = move.promo ? `, promotes to ${names[move.promo]}` : '';
+    const detail = `${names[pieceType]} ${fromSq} ${verb} ${toSq}${promoText}`;
+    return { san, detail };
 }
 
 // ── Promotion dialog ──────────────────────────────────────────
@@ -702,33 +728,56 @@ function renderCaptured() {
     return;
 }
 
+function createHistoryMoveCell(move, side) {
+    const cell = document.createElement('div');
+    cell.className = `history-move ${side}`;
+    if (!move) {
+        cell.classList.add('empty');
+        cell.textContent = '-';
+        return cell;
+    }
+    const san = document.createElement('div');
+    san.className = 'history-san';
+    san.textContent = move.san;
+    const detail = document.createElement('div');
+    detail.className = 'history-detail';
+    detail.textContent = move.detail;
+    cell.appendChild(san);
+    cell.appendChild(detail);
+    return cell;
+}
+
 function renderMoveHistory() {
     const el = document.getElementById('move-history');
     el.innerHTML = '';
+    const header = document.createElement('div');
+    header.className = 'history-row history-head';
+    header.innerHTML = '<div class="history-num">#</div><div class="history-head-cell">White</div><div class="history-head-cell">Black</div>';
+    el.appendChild(header);
+
+    if (!moveHistory_.length) {
+        const empty = document.createElement('div');
+        empty.className = 'move-history-empty';
+        empty.textContent = 'Moves will appear here';
+        el.appendChild(empty);
+        return;
+    }
     let moveNum = 1;
     for (let i = 0; i < moveHistory_.length; i += 2) {
         const wMove = moveHistory_[i];
         const bMove = moveHistory_[i + 1];
+        const row = document.createElement('div');
+        row.className = 'history-row';
+
         const numDiv = document.createElement('div');
-        numDiv.textContent = moveNum + '.';
-        numDiv.style.color = 'rgba(255,255,255,0.25)';
-        numDiv.style.fontSize = '0.7rem';
-        numDiv.style.paddingTop = '2px';
-        el.appendChild(numDiv);
+        numDiv.className = 'history-num';
+        numDiv.textContent = `${moveNum}.`;
+        row.appendChild(numDiv);
+        row.appendChild(createHistoryMoveCell(wMove, 'white'));
+        row.appendChild(createHistoryMoveCell(bMove, 'black'));
 
-        const wDiv = document.createElement('div');
-        wDiv.className = 'move-entry white-move';
-        wDiv.textContent = wMove.notation;
-        el.appendChild(wDiv);
-
-        if (bMove) {
-            const bDiv = document.createElement('div');
-            bDiv.className = 'move-entry black-move';
-            bDiv.textContent = bMove.notation;
-            el.appendChild(bDiv);
-        }
+        el.appendChild(row);
         moveNum++;
-        el.scrollTop = el.scrollHeight;
     }
     el.scrollTop = el.scrollHeight;
 }

@@ -150,6 +150,12 @@ body {
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
+.chess-board.ai-thinking .cell {
+    cursor: wait;
+    pointer-events: none;
+    filter: saturate(0.88);
+}
+
 .file-labels {
     display: flex;
     justify-content: space-around;
@@ -171,7 +177,7 @@ body {
     cursor: pointer;
     position: relative;
     user-select: none;
-    transition: filter 0.1s;
+    transition: filter 0.12s ease, transform 0.08s ease;
 }
 
 .cell.light {
@@ -281,6 +287,59 @@ body {
 .mode-toggle {
     display: flex;
     gap: 8px;
+}
+
+.difficulty-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.difficulty-wrap.disabled {
+    opacity: 0.5;
+}
+
+.difficulty-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.38);
+}
+
+.difficulty-toggle {
+    display: flex;
+    gap: 8px;
+}
+
+.difficulty-btn {
+    flex: 1;
+    padding: 7px 8px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 800;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.12s;
+}
+
+.difficulty-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.difficulty-btn.active {
+    background: rgba(52, 211, 153, 0.18);
+    border-color: rgba(52, 211, 153, 0.52);
+    color: #86efac;
+}
+
+.difficulty-btn:disabled {
+    cursor: not-allowed;
 }
 
 .mode-btn {

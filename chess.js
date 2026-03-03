@@ -259,7 +259,11 @@ function evaluateBoard(board) {
 }
 
 // ── Minimax (Alpha-Beta, depth 3) ─────────────────────────────
-const AI_DEPTH = 3;
+const AI_LEVELS = {
+    easy: { label: 'Easy', depth: 1, randomTopMoves: 6, randomChance: 0.75, thinkMs: [160, 340] },
+    medium: { label: 'Medium', depth: 2, randomTopMoves: 3, randomChance: 0.18, thinkMs: [240, 520] },
+    hard: { label: 'Hard', depth: 3, randomTopMoves: 1, randomChance: 0, thinkMs: [340, 760] },
+};
 
 function minimax(board, depth, alpha, beta, maximizing, castling, ep) {
     if (depth === 0) return { score: evaluateBoard(board) };
@@ -300,9 +304,50 @@ function minimax(board, depth, alpha, beta, maximizing, castling, ep) {
     }
 }
 
-function getBestMove(board, color, castling, ep) {
+function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function scoreAndSortRootMoves(board, color, castling, ep, depth) {
     const maximizing = color === 'w';
-    return minimax(board, AI_DEPTH, -Infinity, Infinity, maximizing, castling, ep).move;
+    const moves = allLegalMoves(board, color, castling, ep);
+    if (!moves.length) return [];
+
+    moves.sort((a, b) => {
+        const va = board[a.tr][a.tc] ? VAL[board[a.tr][a.tc].t] : 0;
+        const vb = board[b.tr][b.tc] ? VAL[board[b.tr][b.tc].t] : 0;
+        return vb - va;
+    });
+
+    const scored = moves.map(move => {
+        if (depth <= 1) {
+            const quick = board[move.tr][move.tc] ? VAL[board[move.tr][move.tc].t] : 0;
+            return { move, score: maximizing ? quick : -quick };
+        }
+        const { board: nb, castling: nc, ep: nep } = applyMove(board, move, castling, ep);
+        const res = minimax(nb, depth - 1, -Infinity, Infinity, !maximizing, nc, nep);
+        return { move, score: res.score };
+    });
+
+    scored.sort((a, b) => maximizing ? b.score - a.score : a.score - b.score);
+    return scored;
+}
+
+function getBestMove(board, color, castling, ep, levelKey) {
+    const level = AI_LEVELS[levelKey] || AI_LEVELS.medium;
+    const scored = scoreAndSortRootMoves(board, color, castling, ep, level.depth);
+    if (!scored.length) return null;
+
+    const topCount = Math.min(level.randomTopMoves, scored.length);
+    if (topCount > 1 && Math.random() < level.randomChance) {
+        return scored[randomInt(0, topCount - 1)].move;
+    }
+    return scored[0].move;
+}
+
+function getAiThinkDelay(levelKey) {
+    const level = AI_LEVELS[levelKey] || AI_LEVELS.medium;
+    return randomInt(level.thinkMs[0], level.thinkMs[1]);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -315,8 +360,44 @@ let moveHistory_ = [];
 let lastMove = null;
 let pendingPromo = null;
 let aiThinking = false;
+let aiLevel = 'medium';
+let aiTimeoutId = null;
+let aiMoveToken = 0;
+
+function clearPendingAiTurn() {
+    aiMoveToken++;
+    if (aiTimeoutId !== null) {
+        clearTimeout(aiTimeoutId);
+        aiTimeoutId = null;
+    }
+}
+
+function syncDifficultyUI() {
+    const wrap = document.getElementById('ai-level-wrap');
+    const buttons = document.querySelectorAll('.difficulty-btn');
+    const disabled = !vsAI || aiThinking;
+    if (wrap) wrap.classList.toggle('disabled', disabled);
+    buttons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.level === aiLevel);
+        btn.disabled = disabled;
+    });
+}
+
+function syncInteractionState() {
+    const boardEl = document.getElementById('chess-board');
+    if (boardEl) boardEl.classList.toggle('ai-thinking', aiThinking);
+    syncDifficultyUI();
+}
+
+function setAiLevel(nextLevel) {
+    if (!AI_LEVELS[nextLevel]) return;
+    aiLevel = nextLevel;
+    syncDifficultyUI();
+    updateStatus();
+}
 
 function newGame() {
+    clearPendingAiTurn();
     board = initBoard();
     castling = { wk: true, wq: true, bk: true, bq: true };
     ep = null;
@@ -369,6 +450,7 @@ function renderAll() {
     updateCells();
     renderCaptured();
     renderMoveHistory();
+    syncInteractionState();
 }
 
 function updateCells() {
@@ -516,14 +598,26 @@ function executeMove(move) {
 }
 
 function scheduleAI() {
+    if (gameOver || !vsAI || currentPlayer !== 'b') return;
+    clearPendingAiTurn();
     aiThinking = true;
+    syncInteractionState();
     updateStatus();
-    setTimeout(() => {
-        const move = getBestMove(board, 'b', castling, ep);
-        if (move) executeMove(move);
+    const token = aiMoveToken;
+    aiTimeoutId = setTimeout(() => {
+        aiTimeoutId = null;
+        if (token !== aiMoveToken || gameOver || !vsAI || currentPlayer !== 'b') {
+            aiThinking = false;
+            syncInteractionState();
+            updateStatus();
+            return;
+        }
         aiThinking = false;
-        updateStatus();
-    }, 50);
+        syncInteractionState();
+        const move = getBestMove(board, 'b', castling, ep, aiLevel);
+        if (move) executeMove(move);
+        else updateStatus();
+    }, getAiThinkDelay(aiLevel));
 }
 
 function moveToNotation(move, piece) {
@@ -585,19 +679,27 @@ function updateStatus() {
     if (gameOver) return;
     const icon = document.getElementById('status-icon');
     const text = document.getElementById('status-text');
-    if (aiThinking) { icon.textContent = '🤖'; text.textContent = 'AI is thinking…'; return; }
-    if (currentPlayer === 'w') {
-        icon.textContent = '♔'; text.textContent = "White's Turn";
-    } else {
-        icon.textContent = '♚'; text.textContent = vsAI ? 'AI (Black)' : "Black's Turn";
+    if (aiThinking) {
+        icon.textContent = 'AI';
+        text.textContent = `AI (${AI_LEVELS[aiLevel].label}) is thinking...`;
+        return;
     }
+    if (currentPlayer === 'w') {
+        icon.textContent = 'W';
+        text.textContent = "White's Turn";
+    } else {
+        icon.textContent = vsAI ? 'AI' : 'B';
+        text.textContent = vsAI ? `AI Turn (${AI_LEVELS[aiLevel].label})` : "Black's Turn";
+    }
+    return;
 }
 
 function renderCaptured() {
     const wEl = document.getElementById('captured-by-white');
     const bEl = document.getElementById('captured-by-black');
-    wEl.innerHTML = capturedW.map(p => UNI['w' + p.t]).join('') || '<span style="opacity:0.3;font-size:0.7rem">—</span>';
-    bEl.innerHTML = capturedB.map(p => UNI['b' + p.t]).join('') || '<span style="opacity:0.3;font-size:0.7rem">—</span>';
+    wEl.innerHTML = capturedW.map(p => UNI[p.c + p.t]).join('') || '<span style="opacity:0.3;font-size:0.7rem">-</span>';
+    bEl.innerHTML = capturedB.map(p => UNI[p.c + p.t]).join('') || '<span style="opacity:0.3;font-size:0.7rem">-</span>';
+    return;
 }
 
 function renderMoveHistory() {
@@ -628,6 +730,7 @@ function renderMoveHistory() {
         moveNum++;
         el.scrollTop = el.scrollHeight;
     }
+    el.scrollTop = el.scrollHeight;
 }
 
 // ── Controls ──────────────────────────────────────────────────
@@ -665,6 +768,14 @@ document.getElementById('vs-human-btn').addEventListener('click', () => {
     document.getElementById('vs-ai-btn').classList.remove('active');
     newGame();
 });
+document.querySelectorAll('.difficulty-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        unlockChessAudio();
+        playChessUiSound();
+        if (!vsAI || aiThinking) return;
+        setAiLevel(btn.dataset.level);
+    });
+});
 
 // Keyboard
 document.addEventListener('keydown', e => {
@@ -683,6 +794,18 @@ document.addEventListener('keydown', e => {
         playChessUiSound();
         flipped = !flipped;
         renderAll();
+    }
+    if (e.code === 'Digit1' && vsAI && !aiThinking) {
+        playChessUiSound();
+        setAiLevel('easy');
+    }
+    if (e.code === 'Digit2' && vsAI && !aiThinking) {
+        playChessUiSound();
+        setAiLevel('medium');
+    }
+    if (e.code === 'Digit3' && vsAI && !aiThinking) {
+        playChessUiSound();
+        setAiLevel('hard');
     }
 });
 

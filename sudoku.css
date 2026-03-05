@@ -73,7 +73,7 @@ body {
 /* ===== Header ===== */
 .game-header {
     width: 100%;
-    max-width: 520px;
+    max-width: 580px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -121,7 +121,7 @@ body {
     align-items: center;
     gap: 14px;
     width: 100%;
-    max-width: 500px;
+    max-width: 560px;
 }
 
 /* ===== Controls Bar ===== */
@@ -193,7 +193,7 @@ body {
     display: grid;
     grid-template-columns: repeat(9, 1fr);
     width: 100%;
-    max-width: 468px;
+    max-width: 520px;
     aspect-ratio: 1;
     border: 3px solid rgba(255, 255, 255, 0.35);
     border-radius: 6px;
@@ -285,7 +285,7 @@ body {
     grid-template-columns: repeat(5, 1fr);
     gap: 8px;
     width: 100%;
-    max-width: 468px;
+    max-width: 520px;
 }
 
 .num-key {

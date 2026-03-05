@@ -20,8 +20,9 @@ body {
 /* ===== Wrapper & Canvas ===== */
 #game-wrapper {
     position: relative;
-    width: 400px;
-    height: 600px;
+    width: min(430px, 94vw);
+    aspect-ratio: 2 / 3;
+    height: auto;
     border-radius: 20px;
     overflow: hidden;
     box-shadow:

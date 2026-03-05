@@ -35,10 +35,10 @@ const MAX_SPEED_X = 290;
 const JUMP_SPEED = 700;
 const BASE_RUN_TIME_LIMIT = 180;
 const MIN_RUN_TIME_LIMIT = 95;
-const GROUND_Y = 500;
 const GROUND_H = 60;
+const GROUND_Y = canvas.height - 40;
 const PLAYER_START_X = 80;
-const PLAYER_START_Y = 420;
+const PLAYER_START_Y = GROUND_Y - 80;
 
 const input = {
     left: false,
@@ -163,7 +163,7 @@ function buildWorld(levelNum = 1) {
         if (maxX - minX < 130) return;
         enemies.push({
             x: randInt(rng, minX + 12, maxX - 12),
-            y: 466,
+            y: GROUND_Y - 34,
             w: 34,
             h: 34,
             minX,

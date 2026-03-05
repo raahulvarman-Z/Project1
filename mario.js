@@ -8,6 +8,7 @@ const overlayBtn = document.getElementById('overlay-btn');
 const startBtn = document.getElementById('start-btn');
 
 const heroEl = document.getElementById('hud-hero');
+const levelEl = document.getElementById('hud-level');
 const coinsEl = document.getElementById('hud-coins');
 const livesEl = document.getElementById('hud-lives');
 const formEl = document.getElementById('hud-form');
@@ -24,14 +25,20 @@ const CHARACTERS = {
     mint: { name: 'Mint', skin: '#f7d6b3', suit: '#16a34a', cap: '#22c55e', trim: '#dcfce7' },
 };
 
-const WORLD_WIDTH = 6400;
+const BASE_WORLD_WIDTH = 6200;
+const LEVEL_WIDTH_STEP = 320;
 const GRAVITY = 1820;
 const MOVE_ACCEL = 1700;
 const AIR_ACCEL = 980;
 const FRICTION = 2100;
 const MAX_SPEED_X = 290;
 const JUMP_SPEED = 700;
-const RUN_TIME_LIMIT = 180;
+const BASE_RUN_TIME_LIMIT = 180;
+const MIN_RUN_TIME_LIMIT = 95;
+const GROUND_Y = 500;
+const GROUND_H = 60;
+const PLAYER_START_X = 80;
+const PLAYER_START_Y = 420;
 
 const input = {
     left: false,
@@ -67,8 +74,10 @@ let coins = 0;
 let lives = 3;
 let distance = 0;
 let state = 'ready';
+let currentLevel = 1;
+let runId = 0;
 let runTime = 0;
-let timeLeft = RUN_TIME_LIMIT;
+let timeLeft = BASE_RUN_TIME_LIMIT;
 let lastTs = 0;
 
 const clouds = [
@@ -78,92 +87,385 @@ const clouds = [
     { x: 1260, y: 80, w: 100, h: 30, speed: 8 },
 ];
 
-function buildWorld() {
-    const solids = [
-        { x: 0, y: 500, w: 1220, h: 60, kind: 'ground' },
-        { x: 1350, y: 500, w: 980, h: 60, kind: 'ground' },
-        { x: 2460, y: 500, w: 1280, h: 60, kind: 'ground' },
-        { x: 3860, y: 500, w: 1150, h: 60, kind: 'ground' },
-        { x: 5150, y: 500, w: 1250, h: 60, kind: 'ground' },
-
-        { x: 580, y: 430, w: 64, h: 70, kind: 'pipe' },
-        { x: 1690, y: 420, w: 66, h: 80, kind: 'pipe' },
-        { x: 3070, y: 430, w: 64, h: 70, kind: 'pipe' },
-        { x: 5480, y: 420, w: 66, h: 80, kind: 'pipe' },
-
-        { x: 420, y: 390, w: 40, h: 40, kind: 'brick' },
-        { x: 460, y: 390, w: 40, h: 40, kind: 'question', used: false, reward: 'coin' },
-        { x: 500, y: 390, w: 40, h: 40, kind: 'brick' },
-        { x: 760, y: 340, w: 40, h: 40, kind: 'question', used: false, reward: 'mushroom' },
-        { x: 800, y: 340, w: 40, h: 40, kind: 'brick' },
-        { x: 840, y: 340, w: 40, h: 40, kind: 'question', used: false, reward: 'coin' },
-
-        { x: 940, y: 420, w: 180, h: 20, kind: 'block' },
-        { x: 1460, y: 400, w: 140, h: 20, kind: 'block' },
-        { x: 1830, y: 350, w: 40, h: 40, kind: 'question', used: false, reward: 'coin' },
-        { x: 1870, y: 350, w: 40, h: 40, kind: 'brick' },
-        { x: 1910, y: 350, w: 40, h: 40, kind: 'question', used: false, reward: 'coin' },
-        { x: 2290, y: 390, w: 150, h: 20, kind: 'block' },
-        { x: 2680, y: 330, w: 160, h: 20, kind: 'block' },
-        { x: 3140, y: 380, w: 180, h: 20, kind: 'block' },
-        { x: 3560, y: 340, w: 160, h: 20, kind: 'block' },
-        { x: 4040, y: 390, w: 180, h: 20, kind: 'block' },
-        { x: 4490, y: 350, w: 150, h: 20, kind: 'block' },
-        { x: 4920, y: 400, w: 170, h: 20, kind: 'block' },
-        { x: 5380, y: 340, w: 160, h: 20, kind: 'block' },
-        { x: 5850, y: 390, w: 180, h: 20, kind: 'block' },
-
-        { x: 6040, y: 460, w: 60, h: 40, kind: 'block' },
-        { x: 6100, y: 420, w: 60, h: 80, kind: 'block' },
-        { x: 6160, y: 380, w: 60, h: 120, kind: 'block' },
-    ];
-
-    const coinsList = [];
-    const addCoinsLine = (startX, y, count, gap) => {
-        for (let i = 0; i < count; i++) coinsList.push({ x: startX + i * gap, y, taken: false });
-    };
-    addCoinsLine(250, 450, 9, 62);
-    addCoinsLine(940, 372, 4, 46);
-    addCoinsLine(1460, 352, 3, 44);
-    addCoinsLine(2280, 350, 4, 42);
-    addCoinsLine(2690, 290, 3, 42);
-    addCoinsLine(3150, 338, 4, 42);
-    addCoinsLine(4040, 350, 4, 42);
-    addCoinsLine(4910, 360, 4, 44);
-    addCoinsLine(5370, 300, 4, 42);
-    addCoinsLine(5880, 350, 4, 42);
-    addCoinsLine(1220, 430, 3, 58);
-    addCoinsLine(2325, 430, 2, 58);
-    addCoinsLine(3740, 430, 3, 58);
-    addCoinsLine(5000, 430, 3, 58);
-
-    const enemies = [
-        { x: 790, y: 466, w: 34, h: 34, minX: 680, maxX: 1120, speed: 56, dir: 1, dead: false },
-        { x: 1860, y: 466, w: 34, h: 34, minX: 1460, maxX: 2180, speed: 62, dir: -1, dead: false },
-        { x: 2750, y: 466, w: 34, h: 34, minX: 2520, maxX: 3350, speed: 66, dir: 1, dead: false },
-        { x: 4300, y: 466, w: 34, h: 34, minX: 3920, maxX: 4920, speed: 66, dir: -1, dead: false },
-        { x: 5620, y: 466, w: 34, h: 34, minX: 5280, maxX: 6200, speed: 62, dir: 1, dead: false },
-    ];
-
-    return {
-        solids,
-        coins: coinsList,
-        enemies,
-        items: [],
-        goalX: WORLD_WIDTH - 220,
+function makeRng(seed) {
+    let t = seed >>> 0;
+    return () => {
+        t += 0x6D2B79F5;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
     };
 }
 
-function startRun() {
-    world = buildWorld();
+function randInt(rng, min, max) {
+    return min + Math.floor(rng() * (max - min + 1));
+}
+
+function buildWorld(levelNum = 1) {
+    const seed = ((Date.now() >>> 0) ^ ((levelNum * 2654435761) >>> 0) ^ ((runId + 1) * 1013904223)) >>> 0;
+    const rng = makeRng(seed);
+    const difficulty = Math.min(1.3, (levelNum - 1) * 0.12);
+    const width = BASE_WORLD_WIDTH + Math.min(2400, (levelNum - 1) * LEVEL_WIDTH_STEP);
+    const solids = [];
+    const coinsList = [];
+    const enemies = [];
+    const enemySpeedBonus = Math.min(54, Math.floor((levelNum - 1) * 4));
+
+    const overlapsRect = (a, b, gap = 0) => (
+        a.x < b.x + b.w + gap &&
+        a.x + a.w > b.x - gap &&
+        a.y < b.y + b.h + gap &&
+        a.y + a.h > b.y - gap
+    );
+
+    const isObstacleSolid = solid => solid.kind !== 'ground';
+
+    const canPlaceObstacle = (candidate, gap = 0) => {
+        for (const existing of solids) {
+            if (!isObstacleSolid(existing)) continue;
+            if (overlapsRect(candidate, existing, gap)) return false;
+        }
+        return true;
+    };
+
+    const addObstacle = (candidate, gap = 0) => {
+        if (!canPlaceObstacle(candidate, gap)) return false;
+        solids.push(candidate);
+        return true;
+    };
+
+    const addCoinsLine = (startX, y, count, gap) => {
+        for (let i = 0; i < count; i++) {
+            coinsList.push({ x: startX + i * gap, y, taken: false });
+        }
+    };
+
+    const addCoinArc = (startX, endX, apexY, edgeY, points) => {
+        if (points < 2 || endX <= startX) return;
+        const span = endX - startX;
+        for (let i = 0; i < points; i++) {
+            const t = i / (points - 1);
+            const x = startX + span * t;
+            const curve = 1 - Math.abs((t * 2) - 1);
+            const y = edgeY - Math.round((edgeY - apexY) * curve);
+            coinsList.push({ x, y, taken: false });
+        }
+    };
+
+    const addQuestionOrBrick = (x, y, rewardBias = 0.72) => {
+        const block = rng() < 0.55
+            ? { x, y, w: 40, h: 40, kind: 'brick' }
+            : { x, y, w: 40, h: 40, kind: 'question', used: false, reward: rng() < rewardBias ? 'coin' : 'mushroom' };
+        return addObstacle(block, 2);
+    };
+
+    const addGroundEnemy = (minX, maxX, extraSpeed = 0) => {
+        if (maxX - minX < 130) return;
+        enemies.push({
+            x: randInt(rng, minX + 12, maxX - 12),
+            y: 466,
+            w: 34,
+            h: 34,
+            minX,
+            maxX,
+            speed: randInt(rng, 56, 70) + enemySpeedBonus + extraSpeed,
+            dir: rng() < 0.5 ? -1 : 1,
+            dead: false,
+        });
+    };
+
+    const placePipe = (x, h, w = 64) => addObstacle({ x, y: GROUND_Y - h, w, h, kind: 'pipe' }, 6);
+
+    const placeSkyBridge = (segStart, segEnd) => {
+        const segWidth = segEnd - segStart;
+        if (segWidth < 560) return false;
+
+        const p1w = randInt(rng, 130, 180);
+        const p2w = randInt(rng, 120, 170);
+        const p3w = randInt(rng, 120, 170);
+        const p1x = segStart + 70;
+        const p2x = p1x + p1w + randInt(rng, 85, 120);
+        const p3x = p2x + p2w + randInt(rng, 80, 115);
+        if (p3x + p3w > segEnd - 60) return false;
+
+        const y1 = randInt(rng, 378, 410);
+        const y2 = Math.max(328, y1 - randInt(rng, 26, 46));
+        const y3 = Math.min(400, y2 + randInt(rng, 12, 30));
+
+        const p1 = { x: p1x, y: y1, w: p1w, h: 20, kind: 'block' };
+        const p2 = { x: p2x, y: y2, w: p2w, h: 20, kind: 'block' };
+        const p3 = { x: p3x, y: y3, w: p3w, h: 20, kind: 'block' };
+        if (!canPlaceObstacle(p1, 10) || !canPlaceObstacle(p2, 10) || !canPlaceObstacle(p3, 10)) return false;
+        solids.push(p1, p2, p3);
+
+        addCoinArc(p1x + 14, p2x + p2w - 14, y2 - 40, y1 - 34, 6);
+        addCoinArc(p2x + 14, p3x + p3w - 14, y2 - 36, y3 - 32, 6);
+        addQuestionOrBrick(p2x + randInt(rng, 6, Math.max(8, p2w - 50)), y2 - 56, 0.8);
+        if (rng() < 0.5) addQuestionOrBrick(p3x + randInt(rng, 4, Math.max(6, p3w - 46)), y3 - 56, 0.75);
+
+        addGroundEnemy(segStart + 30, p1x - 20, 4);
+        addGroundEnemy(p3x + p3w + 24, segEnd - 24, 5);
+        return true;
+    };
+
+    const placePipeGarden = (segStart, segEnd) => {
+        const segWidth = segEnd - segStart;
+        const pipeCount = segWidth > 760 && levelNum >= 4 ? randInt(rng, 2, 3) : randInt(rng, 1, 2);
+        const laneStart = segStart + 110;
+        const laneEnd = segEnd - 110;
+        if (laneEnd - laneStart < 210) return false;
+
+        const laneSpan = laneEnd - laneStart;
+        const spacing = Math.floor(laneSpan / (pipeCount + 1));
+        const pipeXs = [];
+
+        for (let i = 0; i < pipeCount; i++) {
+            const px = laneStart + spacing * (i + 1) - 32;
+            const h = randInt(rng, 64, 94);
+            const w = randInt(rng, 58, 70);
+            if (!placePipe(px, h, w)) continue;
+            pipeXs.push({ x: px, h, w });
+            addCoinArc(px - 12, px + w + 12, GROUND_Y - h - 56, GROUND_Y - h - 34, 5);
+            if (rng() < 0.6) addQuestionOrBrick(px + 10, GROUND_Y - h - 98, 0.76);
+        }
+
+        if (pipeXs.length === 0) return false;
+        addGroundEnemy(segStart + 30, Math.max(segStart + 180, pipeXs[0].x - 16), 3);
+        for (let i = 0; i < pipeXs.length - 1; i++) {
+            addGroundEnemy(pipeXs[i].x + pipeXs[i].w + 16, pipeXs[i + 1].x - 14, 2);
+        }
+        addGroundEnemy(pipeXs[pipeXs.length - 1].x + pipeXs[pipeXs.length - 1].w + 14, segEnd - 24, 4);
+        return true;
+    };
+
+    const placeStairRun = (segStart, segEnd) => {
+        const segWidth = segEnd - segStart;
+        if (segWidth < 580) return false;
+
+        const steps = randInt(rng, 3, Math.min(6, 3 + Math.floor(levelNum / 2)));
+        const blockW = 46;
+        const rise = 34;
+        const totalStairWidth = steps * blockW * 2;
+        const stairStart = segStart + Math.floor((segWidth - totalStairWidth) / 2);
+        if (stairStart < segStart + 70 || stairStart + totalStairWidth > segEnd - 70) return false;
+
+        const stairBlocks = [];
+        for (let i = 0; i < steps; i++) {
+            const h = (i + 1) * rise;
+            stairBlocks.push({ x: stairStart + i * blockW, y: GROUND_Y - h, w: blockW, h, kind: 'block' });
+        }
+        for (let i = 0; i < steps; i++) {
+            const h = (steps - i) * rise;
+            stairBlocks.push({ x: stairStart + steps * blockW + i * blockW, y: GROUND_Y - h, w: blockW, h, kind: 'block' });
+        }
+
+        for (const block of stairBlocks) {
+            if (!canPlaceObstacle(block, 3)) return false;
+        }
+        solids.push(...stairBlocks);
+
+        const topX = stairStart + (steps - 1) * blockW + 5;
+        const topY = GROUND_Y - (steps * rise) - 56;
+        addQuestionOrBrick(topX, topY, 0.7);
+        addCoinArc(stairStart + 18, stairStart + totalStairWidth - 18, topY - 22, GROUND_Y - 82, 8);
+
+        addGroundEnemy(segStart + 24, stairStart - 24, 4);
+        addGroundEnemy(stairStart + totalStairWidth + 20, segEnd - 26, 5);
+        return true;
+    };
+
+    const placeTunnelRush = (segStart, segEnd) => {
+        const segWidth = segEnd - segStart;
+        if (segWidth < 680 || levelNum < 3) return false;
+
+        const tunnelX = segStart + 110;
+        const tunnelW = segWidth - 220;
+        const ceilingY = randInt(rng, 365, 392);
+        const ceiling = { x: tunnelX, y: ceilingY, w: tunnelW, h: 22, kind: 'block' };
+        if (!addObstacle(ceiling, 8)) return false;
+
+        addCoinsLine(tunnelX + 36, 440, Math.max(4, Math.floor(tunnelW / 120)), 58);
+        addQuestionOrBrick(tunnelX + tunnelW - 86, ceilingY - 56, 0.72);
+        if (rng() < 0.5) addQuestionOrBrick(tunnelX + 46, ceilingY - 56, 0.8);
+
+        addGroundEnemy(tunnelX + 24, tunnelX + Math.floor(tunnelW * 0.5), 6);
+        addGroundEnemy(tunnelX + Math.floor(tunnelW * 0.5) + 20, tunnelX + tunnelW - 24, 7);
+        return true;
+    };
+
+    const placeClassicRun = (segStart, segEnd) => {
+        const segWidth = segEnd - segStart;
+        const platformCount = segWidth > 700 ? 3 : 2;
+        const lane = Math.floor(segWidth / (platformCount + 1));
+        const placedPlatforms = [];
+
+        for (let i = 0; i < platformCount; i++) {
+            let placed = false;
+            for (let attempt = 0; attempt < 8; attempt++) {
+                const px = segStart + lane * (i + 1) - randInt(rng, 70, 95);
+                const pw = randInt(rng, 135, 190);
+                const py = randInt(rng, 348, 412);
+                const platform = { x: px, y: py, w: pw, h: 20, kind: 'block' };
+                if (!canPlaceObstacle(platform, 16)) continue;
+                solids.push(platform);
+                placedPlatforms.push(platform);
+                addCoinsLine(px + 18, py - 36, Math.max(2, Math.floor((pw - 22) / 50)), 44);
+                if (rng() < 0.65) addQuestionOrBrick(px + randInt(rng, 4, Math.max(8, pw - 46)), py - 56, 0.76);
+                placed = true;
+                break;
+            }
+            if (!placed && i === 0) return false;
+        }
+
+        addCoinArc(segStart + 40, segEnd - 40, 404, 432, Math.max(5, Math.floor(segWidth / 130)));
+        addGroundEnemy(segStart + 24, segEnd - 24, 2);
+        if (levelNum >= 4 && rng() < 0.58) addGroundEnemy(segStart + Math.floor(segWidth * 0.55), segEnd - 20, 4);
+        return placedPlatforms.length > 0;
+    };
+
+    const placePattern = (segStart, segEnd) => {
+        const segWidth = segEnd - segStart;
+        const roll = rng();
+
+        if (segWidth > 700 && roll < 0.26 && placePipeGarden(segStart, segEnd)) return;
+        if (segWidth > 650 && roll < 0.52 && placeStairRun(segStart, segEnd)) return;
+        if (segWidth > 700 && roll < 0.75 && placeSkyBridge(segStart, segEnd)) return;
+        if (segWidth > 740 && roll < 0.9 && placeTunnelRush(segStart, segEnd)) return;
+        placeClassicRun(segStart, segEnd);
+    };
+
+    solids.push({ x: 0, y: GROUND_Y, w: 1040, h: GROUND_H, kind: 'ground' });
+    addCoinsLine(240, 450, 8, 64);
+    addQuestionOrBrick(440, 390, 0.75);
+    addQuestionOrBrick(480, 390, 0.75);
+    addQuestionOrBrick(520, 390, 0.75);
+    addQuestionOrBrick(760, 340, 0.2);
+    addQuestionOrBrick(800, 340, 0.75);
+    addQuestionOrBrick(840, 340, 0.75);
+    addObstacle({ x: 920, y: 420, w: 160, h: 20, kind: 'block' }, 8);
+    addCoinsLine(940, 382, 3, 48);
+
+    let x = 1040;
+    let segmentIndex = 0;
+    while (x < width - 980) {
+        const gapMin = 96 + Math.min(50, Math.floor(difficulty * 35));
+        const gapMax = 150 + Math.min(55, Math.floor(difficulty * 45));
+        const gap = segmentIndex === 0 ? 120 : randInt(rng, gapMin, gapMax);
+        x += gap;
+
+        const segMin = Math.max(560, 840 - Math.floor(difficulty * 170));
+        const segMax = Math.max(760, 1120 - Math.floor(difficulty * 120));
+        const segWidth = randInt(rng, segMin, segMax);
+        const segStart = x;
+        const segEnd = Math.min(width - 560, segStart + segWidth);
+        const actualWidth = segEnd - segStart;
+        if (actualWidth < 220) break;
+
+        solids.push({ x: segStart, y: GROUND_Y, w: actualWidth, h: GROUND_H, kind: 'ground' });
+        placePattern(segStart, segEnd);
+
+        x = segEnd;
+        segmentIndex += 1;
+    }
+
+    const finalGroundX = width - 560;
+    solids.push({ x: finalGroundX, y: GROUND_Y, w: 560, h: GROUND_H, kind: 'ground' });
+    const stairSteps = 3 + Math.min(3, Math.floor(levelNum / 2));
+    for (let i = 0; i < stairSteps; i++) {
+        addObstacle({
+            x: width - 340 + i * 56,
+            y: GROUND_Y - ((i + 1) * 40),
+            w: 56,
+            h: (i + 1) * 40,
+            kind: 'block',
+        }, 0);
+    }
+    addCoinsLine(width - 470, 332, 5, 44);
+    solids.sort((a, b) => a.x - b.x || a.y - b.y);
+
+    const cleanedSolids = [];
+    for (const solid of solids) {
+        if (solid.kind === 'ground') {
+            cleanedSolids.push(solid);
+            continue;
+        }
+        let overlaps = false;
+        for (const kept of cleanedSolids) {
+            if (kept.kind === 'ground') continue;
+            if (overlapsRect(solid, kept, 1)) {
+                overlaps = true;
+                break;
+            }
+        }
+        if (!overlaps) cleanedSolids.push(solid);
+    }
+
+    const cleanedCoins = [];
+    for (const coin of coinsList) {
+        const cx = Math.round(coin.x);
+        const cy = Math.round(coin.y);
+        if (cx < 16 || cx > width - 16) continue;
+        if (cy < 120 || cy > 480) continue;
+
+        const coinBox = { x: cx - 8, y: cy - 8, w: 16, h: 16 };
+        let touchesSolid = false;
+        for (const solid of cleanedSolids) {
+            if (solid.kind === 'ground') continue;
+            if (overlapsRect(coinBox, solid, 2)) {
+                touchesSolid = true;
+                break;
+            }
+        }
+        if (touchesSolid) continue;
+
+        let tooClose = false;
+        for (const keptCoin of cleanedCoins) {
+            if (Math.abs(keptCoin.x - cx) < 14 && Math.abs(keptCoin.y - cy) < 14) {
+                tooClose = true;
+                break;
+            }
+        }
+        if (tooClose) continue;
+
+        cleanedCoins.push({ x: cx, y: cy, taken: false });
+    }
+
+    return {
+        solids: cleanedSolids,
+        coins: cleanedCoins,
+        enemies,
+        items: [],
+        goalX: width - 220,
+        width,
+        level: levelNum,
+    };
+}
+
+function getLevelTimeLimit(levelNum) {
+    return Math.max(MIN_RUN_TIME_LIMIT, BASE_RUN_TIME_LIMIT - ((levelNum - 1) * 8));
+}
+
+function startRun(resetProgress = true) {
+    if (resetProgress) {
+        currentLevel = 1;
+        lives = 3;
+        score = 0;
+        coins = 0;
+    } else {
+        currentLevel += 1;
+    }
+    runId += 1;
+    world = buildWorld(currentLevel);
     player = {
-        x: 80,
-        y: 420,
+        x: PLAYER_START_X,
+        y: PLAYER_START_Y,
         w: 34,
         h: 46,
         vx: 0,
         vy: 0,
         onGround: false,
+        jumpCount: 0,
+        maxJumps: 2,
         face: 1,
         invuln: 0,
         power: 'small',
@@ -171,13 +473,10 @@ function startRun() {
     };
     state = 'playing';
     cameraX = 0;
-    checkpointX = 80;
-    score = 0;
-    coins = 0;
-    lives = 3;
+    checkpointX = PLAYER_START_X;
     distance = 0;
     runTime = 0;
-    timeLeft = RUN_TIME_LIMIT;
+    timeLeft = getLevelTimeLimit(currentLevel);
     updateHud();
     setOverlay(false);
     startBtn.textContent = 'Restart';
@@ -193,6 +492,7 @@ function setOverlay(show, title = '', text = '', btnLabel = 'Start Run') {
 
 function updateHud() {
     heroEl.textContent = CHARACTERS[selectedChar].name;
+    if (levelEl) levelEl.textContent = String(currentLevel);
     coinsEl.textContent = String(coins);
     livesEl.textContent = String(lives);
     if (formEl) formEl.textContent = player && player.power === 'super' ? 'Super' : 'Small';
@@ -322,14 +622,17 @@ function hitPlayer() {
 
     player.invuln = 1.5;
     player.x = checkpointX;
-    player.y = 420;
+    player.y = PLAYER_START_Y;
     player.vx = 0;
     player.vy = 0;
+    player.onGround = false;
+    player.jumpCount = 0;
     cameraX = Math.max(0, checkpointX - 180);
     updateHud();
 }
 
 function updatePlayer(dt) {
+    const wasOnGround = player.onGround;
     const accel = player.onGround ? MOVE_ACCEL : AIR_ACCEL;
     if (input.left && !input.right) {
         player.vx -= accel * dt;
@@ -344,9 +647,15 @@ function updatePlayer(dt) {
 
     player.vx = Math.max(-MAX_SPEED_X, Math.min(MAX_SPEED_X, player.vx));
 
-    if (input.jumpPressed && player.onGround) {
-        player.vy = -JUMP_SPEED;
-        player.onGround = false;
+    if (input.jumpPressed) {
+        if (player.onGround) {
+            player.vy = -JUMP_SPEED;
+            player.onGround = false;
+            player.jumpCount = 1;
+        } else if (player.jumpCount < player.maxJumps) {
+            player.vy = -Math.round(JUMP_SPEED * 0.92);
+            player.jumpCount += 1;
+        }
     }
     input.jumpPressed = false;
 
@@ -371,11 +680,17 @@ function updatePlayer(dt) {
             player.y = solid.y - player.h;
             player.vy = 0;
             player.onGround = true;
+            player.jumpCount = 0;
         } else if (player.vy < 0) {
             player.y = solid.y + solid.h;
             player.vy = 0;
             onHeadHitBlock(solid);
         }
+    }
+
+    if (!player.onGround && wasOnGround && player.jumpCount === 0) {
+        // Walking off an edge spends the first jump so only one air jump remains.
+        player.jumpCount = 1;
     }
 
     if (player.y > canvas.height + 220) hitPlayer();
@@ -434,11 +749,16 @@ function updateGame(dt) {
 
     if (player.x + player.w >= world.goalX + 18) {
         state = 'won';
-        setOverlay(true, 'You Win', `Great run, ${CHARACTERS[selectedChar].name}! Final score: ${score}.`, 'Play Again');
+        setOverlay(
+            true,
+            `Level ${currentLevel} Cleared`,
+            `Great run, ${CHARACTERS[selectedChar].name}! Score: ${score}. Continue to a harder layout.`,
+            'Next Level'
+        );
     }
 
     cameraX = player.x - canvas.width * 0.34;
-    cameraX = Math.max(0, Math.min(cameraX, WORLD_WIDTH - canvas.width));
+    cameraX = Math.max(0, Math.min(cameraX, world.width - canvas.width));
     updateHud();
 }
 
@@ -798,24 +1118,33 @@ document.querySelectorAll('.char-option').forEach(btn => {
     btn.addEventListener('click', () => setCharacter(btn.dataset.char));
 });
 
-startBtn.addEventListener('click', startRun);
-overlayBtn.addEventListener('click', startRun);
+startBtn.addEventListener('click', () => startRun(true));
+overlayBtn.addEventListener('click', () => {
+    if (state === 'won') {
+        startRun(false);
+        return;
+    }
+    startRun(true);
+});
 
 bindInput();
-world = buildWorld();
+world = buildWorld(currentLevel);
 player = {
-    x: 80,
-    y: 420,
+    x: PLAYER_START_X,
+    y: PLAYER_START_Y,
     w: 34,
     h: 46,
     vx: 0,
     vy: 0,
     onGround: false,
+    jumpCount: 0,
+    maxJumps: 2,
     face: 1,
     invuln: 0,
     power: 'small',
     char: selectedChar,
 };
+timeLeft = getLevelTimeLimit(currentLevel);
 updateHud();
 setOverlay(true, 'Sky Sprint', 'Reach the flag before time runs out. Hit ? blocks for coins and mushrooms, and stomp enemies.', 'Start Run');
 requestAnimationFrame(tick);

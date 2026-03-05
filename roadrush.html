@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Road Rush</title>
+    <meta name="description" content="Race through traffic, dodge rivals, and survive the rush." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;700;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="roadrush.css" />
+</head>
+
+<body>
+    <div class="page">
+        <header class="top-bar">
+            <a class="back-btn" href="index.html">&larr; Menu</a>
+            <h1>Road Rush</h1>
+            <button id="start-btn" class="start-btn" type="button">Start Ride</button>
+        </header>
+
+        <section class="hud">
+            <div class="hud-pill">Speed: <span id="hud-speed">0</span> km/h</div>
+            <div class="hud-pill">Distance: <span id="hud-distance">0</span> m</div>
+            <div class="hud-pill">Score: <span id="hud-score">0</span></div>
+            <div class="hud-pill">Level: <span id="hud-level">1</span></div>
+            <div class="hud-pill">Bike HP: <span id="hud-hp">100</span>%</div>
+            <div class="hud-pill">Nitro: <span id="hud-nitro">100</span>%</div>
+        </section>
+
+        <section class="game-shell">
+            <canvas id="rush-canvas" width="960" height="540" aria-label="Road Rush game canvas"></canvas>
+            <div id="game-overlay" class="game-overlay">
+                <h2 id="overlay-title">Road Rush</h2>
+                <p id="overlay-text">Use Left/Right to steer, Up or Shift for nitro. On mobile use the joystick.</p>
+                <button id="overlay-btn" class="overlay-btn" type="button">Start Ride</button>
+            </div>
+        </section>
+
+
+        <section class="touch-controls" aria-label="Mobile controls">
+            <div class="joystick-wrap" id="joystick-wrap">
+                <div class="joystick-base">
+                    <div class="joystick-ring"></div>
+                    <div class="joystick-knob" id="joystick-knob"></div>
+                </div>
+            </div>
+            <button class="touch-btn boost-btn" id="touch-boost" type="button" aria-label="Nitro boost">
+                <span class="boost-main">A</span>
+                <span class="boost-sub">TURBO</span>
+            </button>
+        </section>
+    </div>
+
+    <script src="roadrush.js"></script>
+</body>
+
+</html>

@@ -11,8 +11,9 @@ body {
     font-family: 'Nunito', sans-serif;
     color: #f9fafb;
     background:
-        radial-gradient(circle at 20% -10%, rgba(190, 24, 93, 0.35), transparent 45%),
-        radial-gradient(circle at 95% 15%, rgba(14, 165, 233, 0.28), transparent 36%),
+        radial-gradient(circle at 14% -10%, rgba(251, 113, 133, 0.34), transparent 42%),
+        radial-gradient(circle at 100% 16%, rgba(56, 189, 248, 0.22), transparent 36%),
+        radial-gradient(circle at 50% 120%, rgba(245, 158, 11, 0.12), transparent 40%),
         linear-gradient(180deg, #0f172a 0%, #111827 100%);
 }
 
@@ -27,7 +28,7 @@ body {
 
 .top-bar {
     display: grid;
-    grid-template-columns: 112px 1fr 120px;
+    grid-template-columns: 112px 1fr 124px;
     align-items: center;
     gap: 10px;
 }
@@ -37,7 +38,7 @@ body {
     font-family: 'Bungee', sans-serif;
     font-size: 1.5rem;
     letter-spacing: 0.04em;
-    color: #fde68a;
+    color: #fca5a5;
 }
 
 .back-btn,
@@ -59,82 +60,14 @@ body {
 }
 
 .start-btn {
-    background: linear-gradient(135deg, #fbbf24, #f97316);
-    color: #111827;
+    background: linear-gradient(135deg, #fb7185, #f97316);
+    color: #1f2937;
     padding: 9px 12px;
-}
-
-.select-wrap {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.11);
-    border-radius: 16px;
-    padding: 10px;
-}
-
-.select-title {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(255, 255, 255, 0.68);
-    margin-bottom: 8px;
-    font-weight: 800;
-}
-
-.char-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-}
-
-.char-option {
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 12px;
-    background: rgba(15, 23, 42, 0.6);
-    color: #fff;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
-}
-
-.char-option:hover {
-    transform: translateY(-1px);
-}
-
-.char-option.active {
-    border-color: rgba(251, 191, 36, 0.85);
-    background: rgba(180, 83, 9, 0.22);
-}
-
-.char-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.35);
-}
-
-.char-icon.blaze {
-    background: radial-gradient(circle at 35% 30%, #ffe082, #fb923c 70%);
-}
-
-.char-icon.nova {
-    background: radial-gradient(circle at 35% 30%, #bfdbfe, #38bdf8 70%);
-}
-
-.char-icon.mint {
-    background: radial-gradient(circle at 35% 30%, #dcfce7, #22c55e 70%);
-}
-
-.char-name {
-    font-size: 0.9rem;
-    font-weight: 800;
 }
 
 .hud {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 8px;
 }
 
@@ -154,14 +87,16 @@ body {
     border-radius: 16px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.4);
+    box-shadow:
+        0 18px 36px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(248, 113, 113, 0.08) inset;
 }
 
-#runner-canvas {
+#rush-canvas {
     width: 100%;
     height: auto;
     display: block;
-    background: #7dd3fc;
+    background: #1e293b;
 }
 
 .game-overlay {
@@ -185,19 +120,19 @@ body {
 .game-overlay h2 {
     font-family: 'Bungee', sans-serif;
     font-size: 1.6rem;
-    color: #fde68a;
+    color: #fecaca;
 }
 
 .game-overlay p {
-    max-width: 520px;
+    max-width: 560px;
     color: rgba(255, 255, 255, 0.86);
-    font-size: 0.96rem;
+    font-size: 0.95rem;
 }
 
 .overlay-btn {
     margin-top: 4px;
-    background: linear-gradient(135deg, #34d399, #10b981);
-    color: #052e16;
+    background: linear-gradient(135deg, #f87171, #ea580c);
+    color: #fff7ed;
     padding: 10px 20px;
     font-size: 0.95rem;
 }
@@ -257,11 +192,11 @@ body {
     width: 116px;
     height: 116px;
     border-radius: 50%;
+    position: relative;
     border: 1px solid rgba(17, 24, 39, 0.55);
     background:
         radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02) 60%),
         linear-gradient(160deg, #322265, #1f1648);
-    position: relative;
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.22),
         inset 0 -8px 16px rgba(5, 5, 30, 0.45),
@@ -334,16 +269,18 @@ body {
     height: 28px;
 }
 
-.touch-action-btn {
-    border: 1px solid rgba(10, 10, 20, 0.8);
-    color: #fff;
+.touch-btn {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 14px 20px;
     font-weight: 900;
-    letter-spacing: 0.01em;
-    cursor: pointer;
+    color: #fff;
+    letter-spacing: 0.02em;
     touch-action: none;
+    background: rgba(15, 23, 42, 0.78);
 }
 
-.jump-btn {
+.boost-btn {
     width: 96px;
     height: 96px;
     border-radius: 50%;
@@ -351,6 +288,7 @@ body {
     display: grid;
     place-content: center;
     gap: 1px;
+    border: 1px solid rgba(10, 10, 20, 0.8);
     background:
         radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 48%),
         linear-gradient(160deg, #2e1f5d, #190f3a 72%);
@@ -362,7 +300,7 @@ body {
     position: relative;
 }
 
-.jump-main {
+.boost-main {
     font-size: 1.1rem;
     letter-spacing: 0.05em;
     line-height: 1;
@@ -370,14 +308,14 @@ body {
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
 }
 
-.jump-sub {
+.boost-sub {
     font-size: 0.5rem;
     letter-spacing: 0.16em;
     color: rgba(196, 181, 253, 0.95);
     line-height: 1;
 }
 
-.jump-btn:active {
+.touch-btn:active {
     transform: scale(0.98);
 }
 
@@ -422,18 +360,12 @@ body {
         height: 104px;
     }
 
-    .jump-btn {
+    .boost-btn {
         width: 90px;
         height: 90px;
     }
 
-    .jump-main {
+    .boost-main {
         font-size: 1rem;
-    }
-}
-
-@media (max-width: 520px) {
-    .char-grid {
-        grid-template-columns: 1fr;
     }
 }

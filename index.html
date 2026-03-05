@@ -119,6 +119,24 @@
         </div>
       </a>
 
+      <!-- Road Rush Card -->
+      <a href="roadrush.html" class="game-card" id="card-roadrush">
+        <div class="card-glow roadrush-glow"></div>
+        <div class="card-preview roadrush-preview">
+          <canvas id="roadrush-preview-canvas" width="280" height="160"></canvas>
+        </div>
+        <div class="card-body">
+          <div class="card-icon">RUSH</div>
+          <h2 class="card-title">Road Rush</h2>
+          <p class="card-desc">Classic highway racing vibes: dodge traffic, boost your speed, and survive the chaos.</p>
+          <div class="card-tags">
+            <span class="tag">Racing</span>
+            <span class="tag">Traffic Dodge</span>
+          </div>
+          <div class="card-cta">Play Now -&gt;</div>
+        </div>
+      </a>
+
     </main>
 
     <footer class="site-footer">
@@ -421,6 +439,92 @@
       }
 
       drawM();
+    })();
+
+    // Animated preview: Road Rush
+    (function () {
+      const c = document.getElementById('roadrush-preview-canvas');
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const W = c.width, H = c.height;
+      const roadW = 140;
+      const roadX = (W - roadW) / 2;
+      const lanes = 4;
+      const cars = [
+        { lane: 0, y: 20, color: '#ef4444' },
+        { lane: 2, y: 78, color: '#22c55e' },
+        { lane: 3, y: 120, color: '#3b82f6' }
+      ];
+      let t = 0;
+      let riderLane = 1.4;
+
+      function lx(lane) {
+        return roadX + (lane + 0.5) * (roadW / lanes);
+      }
+
+      function drawR() {
+        t += 0.035;
+        ctx.clearRect(0, 0, W, H);
+
+        const bg = ctx.createLinearGradient(0, 0, 0, H);
+        bg.addColorStop(0, '#111827');
+        bg.addColorStop(1, '#0b1022');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(roadX, 0, roadW, H);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(roadX - 8, 0, 4, H);
+        ctx.fillRect(roadX + roadW + 4, 0, 4, H);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([12, 9]);
+        ctx.lineDashOffset = -(t * 90);
+        for (let i = 1; i < lanes; i++) {
+          const x = roadX + i * (roadW / lanes);
+          ctx.beginPath();
+          ctx.moveTo(x, -20);
+          ctx.lineTo(x, H + 20);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        cars.forEach((car, i) => {
+          car.y += 1.1 + i * 0.2;
+          if (car.y > H + 30) {
+            car.y = -26 - Math.random() * 30;
+            car.lane = Math.floor(Math.random() * lanes);
+          }
+          const x = lx(car.lane);
+          ctx.fillStyle = '#0b1120';
+          ctx.fillRect(x - 4, car.y - 14, 8, 28);
+          ctx.fillStyle = car.color;
+          ctx.fillRect(x - 8, car.y - 10, 16, 20);
+          ctx.fillStyle = '#bfdbfe';
+          ctx.fillRect(x - 6, car.y - 9, 12, 5);
+        });
+
+        riderLane += (1.5 + Math.sin(t * 3) * 0.95 - riderLane) * 0.08;
+        const rx = lx(riderLane);
+        const ry = H - 24;
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(rx - 3, ry - 17, 6, 34);
+        ctx.fillStyle = '#f97316';
+        ctx.fillRect(rx - 7, ry - 10, 14, 16);
+        ctx.fillStyle = '#f1f5f9';
+        ctx.fillRect(rx - 5, ry - 14, 10, 4);
+
+        ctx.fillStyle = '#fde68a';
+        ctx.font = '700 10px Nunito';
+        ctx.textAlign = 'center';
+        ctx.fillText('RUSH HOUR', W / 2, 14);
+
+        requestAnimationFrame(drawR);
+      }
+
+      drawR();
     })();
   </script>
 </body>

@@ -43,8 +43,10 @@
             <div class="hud-pill">Hero: <span id="hud-hero">Blaze</span></div>
             <div class="hud-pill">Coins: <span id="hud-coins">0</span></div>
             <div class="hud-pill">Lives: <span id="hud-lives">3</span></div>
+            <div class="hud-pill">Form: <span id="hud-form">Small</span></div>
             <div class="hud-pill">Distance: <span id="hud-distance">0m</span></div>
             <div class="hud-pill">Score: <span id="hud-score">0</span></div>
+            <div class="hud-pill">Time: <span id="hud-time">180</span></div>
         </section>
 
         <section class="game-shell">
@@ -56,14 +58,15 @@
             </div>
         </section>
 
-        <section class="help">
-            <p>Controls: Left/Right or A/D to move. Up/Space/W to jump.</p>
-        </section>
 
-        <section class="touch-controls">
-            <button class="touch-btn" data-action="left">Left</button>
-            <button class="touch-btn" data-action="jump">Jump</button>
-            <button class="touch-btn" data-action="right">Right</button>
+
+        <section class="touch-controls" aria-label="Mobile controls">
+            <div class="joystick-wrap" id="joystick-wrap">
+                <div class="joystick-base">
+                    <div class="joystick-knob" id="joystick-knob"></div>
+                </div>
+            </div>
+            <button class="touch-action-btn jump-btn" id="jump-btn" type="button">Jump</button>
         </section>
     </div>
 

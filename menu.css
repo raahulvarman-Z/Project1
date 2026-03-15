@@ -199,6 +199,11 @@ body {
         0 0 40px rgba(244, 63, 94, 0.22);
 }
 
+.spellbee-glow {
+    box-shadow: inset 0 0 50px rgba(250, 204, 21, 0.16),
+        0 0 40px rgba(250, 204, 21, 0.22);
+}
+
 .game-card:hover #card-flappy,
 #card-flappy:hover {
     box-shadow: 0 20px 60px rgba(251, 191, 36, 0.25);
@@ -229,6 +234,11 @@ body {
     box-shadow: 0 20px 60px rgba(244, 63, 94, 0.24);
 }
 
+.game-card:hover #card-spellbee,
+#card-spellbee:hover {
+    box-shadow: 0 20px 60px rgba(250, 204, 21, 0.24);
+}
+
 #card-flappy:hover {
     box-shadow: 0 20px 60px rgba(251, 191, 36, 0.3);
 }
@@ -251,6 +261,10 @@ body {
 
 #card-roadrush:hover {
     box-shadow: 0 20px 60px rgba(244, 63, 94, 0.3);
+}
+
+#card-spellbee:hover {
+    box-shadow: 0 20px 60px rgba(250, 204, 21, 0.3);
 }
 
 /* Canvas Preview */
@@ -289,6 +303,10 @@ body {
 
 .roadrush-preview {
     background: #1f2937;
+}
+
+.spellbee-preview {
+    background: #2e1b07;
 }
 
 /* Card Body */
@@ -372,6 +390,10 @@ body {
 
 #card-roadrush:hover .card-cta {
     color: #f43f5e;
+}
+
+#card-spellbee:hover .card-cta {
+    color: #facc15;
 }
 
 /* ===== Footer ===== */

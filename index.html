@@ -137,6 +137,24 @@
         </div>
       </a>
 
+      <!-- Spell Bee Card -->
+      <a href="spellbee.html" class="game-card" id="card-spellbee">
+        <div class="card-glow spellbee-glow"></div>
+        <div class="card-preview spellbee-preview">
+          <canvas id="spellbee-preview-canvas" width="280" height="160"></canvas>
+        </div>
+        <div class="card-body">
+          <div class="card-icon">ABC</div>
+          <h2 class="card-title">Spell Bee</h2>
+          <p class="card-desc">Hear the word, read the clue, and type the correct spelling before your lives run out.</p>
+          <div class="card-tags">
+            <span class="tag">Word Game</span>
+            <span class="tag">Streak Score</span>
+          </div>
+          <div class="card-cta">Play Now -&gt;</div>
+        </div>
+      </a>
+
     </main>
 
     <footer class="site-footer">
@@ -525,6 +543,91 @@
       }
 
       drawR();
+    })();
+
+    // Animated preview: Spell Bee
+    (function () {
+      const c = document.getElementById('spellbee-preview-canvas');
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const W = c.width, H = c.height;
+      let t = 0;
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+
+      function drawBee(x, y, wingOffset) {
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.beginPath();
+        ctx.ellipse(x - 10, y - 10 + wingOffset, 10, 6, -0.5, 0, Math.PI * 2);
+        ctx.ellipse(x + 4, y - 10 - wingOffset, 10, 6, 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.ellipse(x, y, 18, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(x - 12, y - 10, 4, 20);
+        ctx.fillRect(x - 2, y - 11, 4, 22);
+        ctx.fillRect(x + 8, y - 10, 4, 20);
+        ctx.fillStyle = '#111827';
+        ctx.beginPath();
+        ctx.arc(x + 12, y - 2, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fff8db';
+        ctx.beginPath();
+        ctx.arc(x + 15, y - 4, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawSpell() {
+        t += 0.035;
+        ctx.clearRect(0, 0, W, H);
+
+        const bg = ctx.createLinearGradient(0, 0, 0, H);
+        bg.addColorStop(0, '#5a3507');
+        bg.addColorStop(1, '#201205');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.fillStyle = 'rgba(250, 204, 21, 0.18)';
+        for (let i = 0; i < 6; i++) {
+          const x = 24 + i * 44;
+          const y = 22 + (i % 2) * 20;
+          ctx.beginPath();
+          ctx.arc(x, y, 10, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.fillStyle = '#fff4c2';
+        ctx.font = '700 16px Nunito';
+        letters.forEach((letter, i) => {
+          const x = 38 + i * 48;
+          const y = 118 + Math.sin(t * 2 + i) * 10;
+          ctx.fillText(letter, x, y);
+        });
+
+        ctx.strokeStyle = 'rgba(255, 244, 194, 0.35)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(24, 130);
+        for (let i = 0; i < letters.length; i++) {
+          const x = 42 + i * 48;
+          const y = 124 + Math.sin(t * 2 + i) * 10;
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        drawBee(170 + Math.sin(t) * 42, 62 + Math.cos(t * 1.5) * 10, Math.sin(t * 8) * 3);
+
+        ctx.fillStyle = '#fff7db';
+        ctx.font = '700 10px Nunito';
+        ctx.fillText('SPELL THE WORD', 92, 18);
+
+        requestAnimationFrame(drawSpell);
+      }
+
+      drawSpell();
     })();
   </script>
 </body>
